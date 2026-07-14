@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saken Village · Front Office Dashboard · 04 Jul 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+:root{--bg:#070d18;--sf:#0e1623;--sf2:#141f30;--bd:#1c2d44;--acc:#e8a020;--bl:#3b82f6;--gr:#10b981;--rd:#ef4444;--tx:#eef2f8;--mu:#5a7499;--mu2:#8ba4c0;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;}
+#dash{display:flex;flex-direction:column;min-height:100vh;}
+.topbar{background:var(--sf);border-bottom:1px solid var(--bd);padding:0 26px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;gap:10px;}
+.brand{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;letter-spacing:1px;white-space:nowrap;}
+.brand span{color:var(--acc);}
+.dbadge{background:var(--sf2);border:1px solid var(--bd);border-radius:5px;padding:3px 11px;font-size:11px;color:var(--mu2);}
+.tabs{display:flex;gap:2px;background:var(--sf2);padding:3px;border-radius:9px;border:1px solid var(--bd);}
+.tb{background:none;border:none;color:var(--mu);font-size:12px;font-weight:500;padding:6px 13px;border-radius:6px;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;white-space:nowrap;}
+.tb.active{background:var(--acc);color:#000;font-weight:700;}
+.tb:not(.active):hover{color:var(--tx);}
+.cnt{flex:1;padding:22px 26px;max-width:1700px;margin:0 auto;width:100%;}
+.tp{display:none;animation:fi .22s ease;}
+.tp.active{display:block;}
+@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:13px;padding:20px 22px;margin-bottom:18px;}
+.ch{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--mu2);margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+.pill{font-size:10px;background:var(--sf2);border:1px solid var(--bd);color:var(--mu2);padding:2px 8px;border-radius:20px;text-transform:none;letter-spacing:0;font-family:'DM Sans',sans-serif;font-weight:400;white-space:nowrap;}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:13px;margin-bottom:18px;}
+.kpi{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:17px 19px;position:relative;overflow:hidden;transition:border-color .2s;}
+.kpi:hover{border-color:var(--acc);}
+.ks{position:absolute;bottom:0;left:0;right:0;height:3px;border-radius:0 0 12px 12px;}
+.kl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--mu);margin-bottom:7px;}
+.kv{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;line-height:1;margin-bottom:3px;}
+.ksub{font-size:11px;color:var(--mu2);}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;}
+.g21{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:18px;}
+.g12{display:grid;grid-template-columns:1fr 2fr;gap:16px;margin-bottom:18px;}
+.ob{display:flex;flex-direction:column;gap:10px;}
+.or{display:flex;align-items:center;gap:9px;}
+.ol{width:100px;font-size:11px;font-weight:500;color:var(--mu2);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ot{flex:1;height:7px;background:var(--sf2);border-radius:4px;overflow:hidden;}
+.of{height:100%;border-radius:4px;transition:width 1.2s cubic-bezier(.34,1.56,.64,1);}
+.op{width:42px;font-size:11px;font-weight:700;}
+.oc{font-size:10px;color:var(--mu);width:56px;text-align:right;}
+.al{display:flex;flex-direction:column;gap:6px;}
+.ai{display:flex;align-items:center;gap:9px;padding:9px 12px;background:var(--sf2);border-radius:8px;border:1px solid var(--bd);}
+.ar{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--bl);min-width:80px;}
+.ac{font-size:12px;color:var(--mu2);flex:1;}
+.abg{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;text-transform:uppercase;letter-spacing:.4px;}
+.bout{background:rgba(239,68,68,.15);color:#ef4444;}
+.bin{background:rgba(16,185,129,.15);color:#10b981;}
+.rr{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--bd);}
+.rr:last-child{border:none;}
+.rl{font-size:13px;color:var(--mu2);}
+.rv{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;}
+/* MAP */
+#map-container{width:100%;background:#08111e;border-radius:10px;border:1px solid var(--bd);overflow:hidden;position:relative;}
+.mtt{position:fixed;background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:12px 16px;pointer-events:none;z-index:9999;font-size:12px;box-shadow:0 8px 32px rgba(0,0,0,.7);display:none;min-width:170px;}
+.mtt-iso{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--mu);margin-bottom:4px;}
+.mtt-name{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;margin-bottom:6px;color:var(--tx);}
+.mtt-pax{color:var(--acc);font-weight:600;font-size:13px;}
+.map-legend{display:flex;align-items:center;gap:20px;margin-top:12px;flex-wrap:wrap;}
+.leg-grad{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--mu2);}
+.grad-bar{width:110px;height:7px;border-radius:4px;background:linear-gradient(to right,#1a3d7a,#2272d8,#38a8e8,#f5c020,#e82020);}
+.mstat{font-size:11px;color:var(--mu2);}
+.mstat strong{color:var(--tx);}
+.mbtns{display:flex;gap:6px;}
+.mbtn{background:var(--sf2);border:1px solid var(--bd);color:var(--mu2);padding:4px 11px;border-radius:6px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
+.mbtn.on{background:var(--acc);border-color:var(--acc);color:#000;font-weight:600;}
+/* NAT */
+.nl{display:flex;flex-direction:column;gap:5px;max-height:420px;overflow-y:auto;}
+.ni{display:flex;align-items:center;gap:9px;padding:8px 12px;background:var(--sf2);border-radius:7px;border:1px solid var(--bd);}
+.nc{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;width:34px;color:var(--bl);}
+.nn{flex:1;font-size:12px;color:var(--mu2);}
+.nbw{width:75px;height:5px;background:var(--bg);border-radius:3px;overflow:hidden;}
+.nbf{height:100%;border-radius:3px;}
+.nct{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;min-width:26px;text-align:right;}
+/* TABLE */
+.sbar{width:100%;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;padding:10px 14px;color:var(--tx);font-size:13px;font-family:'DM Sans',sans-serif;margin-bottom:12px;outline:none;transition:border-color .2s;}
+.sbar:focus{border-color:var(--bl);}
+.sbar::placeholder{color:var(--mu);}
+.frow{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap;}
+.fsel{background:var(--sf2);border:1px solid var(--bd);color:var(--tx);padding:7px 11px;border-radius:7px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;cursor:pointer;}
+.tw{overflow:auto;max-height:490px;border-radius:9px;border:1px solid var(--bd);}
+.dt{width:100%;border-collapse:collapse;font-size:12px;}
+.dt th{text-align:left;padding:9px 12px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--mu);border-bottom:1px solid var(--bd);background:var(--sf);position:sticky;top:0;z-index:5;white-space:nowrap;}
+.dt td{padding:9px 12px;border-bottom:1px solid rgba(28,45,68,.45);vertical-align:middle;}
+.dt tr:hover td{background:var(--sf2);}
+.ntag{display:inline-flex;align-items:center;justify-content:center;width:30px;height:18px;background:var(--sf2);border-radius:3px;font-size:10px;font-weight:700;color:var(--mu2);}
+.sb{font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;text-transform:uppercase;}
+.sbl{background:rgba(59,130,246,.15);color:#60a5fa;}
+.sbs{background:rgba(232,160,32,.15);color:#fbbf24;}
+/* CO */
+.col{display:flex;flex-direction:column;gap:5px;max-height:520px;overflow-y:auto;}
+.coi{display:flex;align-items:center;gap:9px;padding:9px 12px;background:var(--sf2);border-radius:8px;border:1px solid var(--bd);transition:border-color .2s;}
+.coi:hover{border-color:var(--acc);}
+.cork{width:20px;font-size:10px;font-weight:700;color:var(--mu);text-align:center;}
+.conm{flex:1;font-size:12px;font-weight:500;}
+.cobw{width:70px;height:5px;background:var(--bg);border-radius:3px;overflow:hidden;}
+.cob{height:100%;border-radius:3px;background:var(--bl);}
+.corm{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--acc);min-width:26px;text-align:right;}
+.copx{font-size:11px;color:var(--mu);min-width:32px;text-align:right;}
+/* EMAIL SETUP */
+.email-card{background:linear-gradient(135deg,#0e1e35,#0e1623);border:1px solid #1e3d5a;border-radius:13px;padding:24px;margin-bottom:18px;}
+.email-hd{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:8px;color:var(--tx);}
+.email-sub{font-size:13px;color:var(--mu2);margin-bottom:20px;line-height:1.6;}
+.steps{display:flex;flex-direction:column;gap:14px;}
+.step{display:flex;gap:14px;align-items:flex-start;}
+.step-num{width:28px;height:28px;background:var(--acc);color:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;flex-shrink:0;margin-top:1px;}
+.step-body{flex:1;}
+.step-title{font-weight:600;font-size:13px;margin-bottom:3px;}
+.step-desc{font-size:12px;color:var(--mu2);line-height:1.5;}
+.code-block{background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:14px 16px;font-family:monospace;font-size:11px;color:#84cc16;margin-top:10px;line-height:1.7;overflow-x:auto;white-space:pre;}
+.opt-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:16px;}
+.opt-card{background:var(--sf2);border:1px solid var(--bd);border-radius:10px;padding:16px;text-align:center;}
+.opt-icon{font-size:28px;margin-bottom:8px;}
+.opt-name{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;margin-bottom:4px;}
+.opt-desc{font-size:11px;color:var(--mu2);line-height:1.5;}
+.opt-badge{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;margin-top:6px;text-transform:uppercase;}
+.free{background:rgba(16,185,129,.15);color:#10b981;}
+.easy{background:rgba(59,130,246,.15);color:#60a5fa;}
+.pro{background:rgba(232,160,32,.15);color:#fbbf24;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--sf);}
+::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px;}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media(max-width:880px){.g2,.g21,.g12{grid-template-columns:1fr!important;}.cnt{padding:14px 12px;}.topbar{flex-wrap:wrap;height:auto;padding:10px 14px;}.tabs{overflow-x:auto;}.opt-row{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div id="dash">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="brand">⬡ SAKEN <span>VILLAGE</span></div>
+      <div class="dbadge">04 July 2026</div>
+      <div class="dbadge" style="color:var(--gr);border-color:rgba(16,185,129,.4)">● LIVE DATA</div>
+    </div>
+    <div class="tabs">
+      <button class="tb active" onclick="showTab('ov',this)">Overview</button>
+      <button class="tb" onclick="showTab('wm',this)">🌍 World Map</button>
+      <button class="tb" onclick="showTab('gs',this)">Guests</button>
+      <button class="tb" onclick="showTab('co',this)">Companies</button>
+      <button class="tb" onclick="showTab('rv',this)">Revenue</button>
+      <button class="tb" onclick="showTab('auto',this)">⚡ Auto-Update</button>
+    </div>
+    <div style="font-size:11px;color:var(--mu2)">718 units · 3 compounds</div>
+  </div>
+
+  <div class="cnt">
+
+    <!-- OVERVIEW -->
+    <div id="tab-ov" class="tp active">
+      <div class="kpis" id="kpis"></div>
+      <div class="g21">
+        <div class="card">
+          <div class="ch">Occupancy by Unit Type <span class="pill">718 total units · 10 categories</span></div>
+          <div class="ob" id="obbars"></div>
+        </div>
+        <div class="card">
+          <div class="ch">Stay Mix</div>
+          <canvas id="smix" style="max-height:200px"></canvas>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="ch">Today's Check-Outs <span class="pill" id="coctpill">0</span></div>
+          <div class="al" id="colist"></div>
+        </div>
+        <div class="card">
+          <div class="ch">Today's Check-Ins <span class="pill" id="cictpill">0</span></div>
+          <div class="al" id="cilist"></div>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="card"><div class="ch">SRC — Saken Residential Complex</div><div id="srcst"></div></div>
+        <div class="card"><div class="ch">Saken Village Breakdown</div><div id="sakst"></div></div>
+      </div>
+    </div>
+
+    <!-- WORLD MAP -->
+    <div id="tab-wm" class="tp">
+      <div class="card" style="margin-bottom:16px">
+        <div class="ch">
+          Guest Nationality — Geographic Distribution
+          <div class="mbtns">
+            <button class="mbtn on" id="mbtn-pax" onclick="setMode('pax',this)">By Pax</button>
+            <button class="mbtn" id="mbtn-rooms" onclick="setMode('rooms',this)">By Rooms</button>
+          </div>
+        </div>
+        <div id="map-container">
+          <div style="height:380px;display:flex;align-items:center;justify-content:center;color:var(--mu2);font-size:13px;gap:10px">
+            <div style="width:22px;height:22px;border:2px solid var(--bd);border-top-color:var(--acc);border-radius:50%;animation:sp .7s linear infinite"></div>
+            Loading world map…
+          </div>
+        </div>
+        <div class="map-legend">
+          <div class="leg-grad"><span>1 pax</span><div class="grad-bar"></div><span>66 pax</span></div>
+          <div class="mstat">Countries: <strong id="mst-co">36</strong></div>
+          <div class="mstat">Total Pax: <strong id="mst-px">327</strong></div>
+          <div class="mstat" style="color:var(--gr)">📍 Jubail, KSA</div>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="card"><div class="ch">Nationalities Ranked by Pax</div><div class="nl" id="natlist"></div></div>
+        <div class="card"><div class="ch">Pax Distribution</div><canvas id="natbar" style="max-height:340px"></canvas></div>
+      </div>
+    </div>
+
+    <!-- GUESTS -->
+    <div id="tab-gs" class="tp">
+      <div class="card">
+        <div class="ch">Guest Roster — Present Occupancy <span class="pill" id="gtpill">218 guests</span></div>
+        <input type="text" class="sbar" id="gsearch" placeholder="Search name, room, company, nationality…" oninput="filterG()">
+        <div class="frow">
+          <select class="fsel" id="fseg" onchange="filterG()">
+            <option value="">All Stay Types</option>
+            <option value="Long Stay">Long Stay</option>
+            <option value="Short Stay">Short Stay</option>
+          </select>
+          <select class="fsel" id="ftype" onchange="filterG()">
+            <option value="">All Unit Types</option>
+            <option value="STU">Studio</option>
+            <option value="1BR">1 Bedroom</option>
+            <option value="2BR">2 Bedroom</option>
+            <option value="3BR">3 Bedroom</option>
+            <option value="4BR">4 Bedroom</option>
+          </select>
+          <select class="fsel" id="fnat" onchange="filterG()"><option value="">All Nationalities</option></select>
+          <select class="fsel" id="fsob" onchange="filterG()">
+            <option value="">All Sources</option>
+            <option value="Corporate">Corporate</option>
+            <option value="Walk In">Walk In</option>
+          </select>
+        </div>
+        <div class="tw">
+          <table class="dt">
+            <thead><tr>
+              <th>Room</th><th>Guest Name</th><th>Company</th>
+              <th>Stay</th><th>Unit</th><th>Nat</th>
+              <th>Pax</th><th>Check-In</th><th>Check-Out</th>
+              <th>Rack SAR</th><th>Charged SAR</th>
+            </tr></thead>
+            <tbody id="gtbody"></tbody>
+          </table>
+        </div>
+        <div style="margin-top:9px;font-size:11px;color:var(--mu)" id="glbl"></div>
+      </div>
+    </div>
+
+    <!-- COMPANIES -->
+    <div id="tab-co" class="tp">
+      <div class="kpis" style="grid-template-columns:repeat(4,1fr)">
+        <div class="kpi"><div class="kl">Total Companies</div><div class="kv" style="color:var(--acc)" id="co-ttl">—</div><div class="ksub">Active clients</div><div class="ks" style="background:var(--acc)"></div></div>
+        <div class="kpi"><div class="kl">Top Client</div><div class="kv" style="color:var(--bl);font-size:15px" id="co-top">—</div><div class="ksub" id="co-top-s">—</div><div class="ks" style="background:var(--bl)"></div></div>
+        <div class="kpi"><div class="kl">Occupied Rooms</div><div class="kv" style="color:var(--gr)" id="co-corp">—</div><div class="ksub">All present guests</div><div class="ks" style="background:var(--gr)"></div></div>
+        <div class="kpi"><div class="kl">Total Pax</div><div class="kv" style="color:#a855f7" id="co-pax">—</div><div class="ksub">People in compound</div><div class="ks" style="background:#a855f7"></div></div>
+      </div>
+      <div class="g12">
+        <div class="card"><div class="ch">All Companies</div><div class="col" id="colist2"></div></div>
+        <div class="card"><div class="ch">Top 12 by Room Count</div><canvas id="cochart" style="max-height:420px"></canvas></div>
+      </div>
+    </div>
+
+    <!-- REVENUE -->
+    <div id="tab-rv" class="tp">
+      <div class="kpis" style="grid-template-columns:repeat(3,1fr)">
+        <div class="kpi"><div class="kl">Total Rack Rate</div><div class="kv" style="color:var(--acc)" id="r-rack">—</div><div class="ksub">SAR / night</div><div class="ks" style="background:var(--acc)"></div></div>
+        <div class="kpi"><div class="kl">Total Charged</div><div class="kv" style="color:var(--bl)" id="r-chg">—</div><div class="ksub">Actual billed</div><div class="ks" style="background:var(--bl)"></div></div>
+        <div class="kpi"><div class="kl">Discount Given</div><div class="kv" style="color:var(--rd)" id="r-disc">—</div><div class="ksub">Rack minus charged</div><div class="ks" style="background:var(--rd)"></div></div>
+        <div class="kpi"><div class="kl">Avg Rate / Unit</div><div class="kv" style="color:#a855f7" id="r-avg">—</div><div class="ksub">Per night</div><div class="ks" style="background:#a855f7"></div></div>
+        <div class="kpi"><div class="kl">RevPAR</div><div class="kv" style="color:var(--gr)" id="r-revpar">—</div><div class="ksub">Per available unit</div><div class="ks" style="background:var(--gr)"></div></div>
+        <div class="kpi"><div class="kl">Rate Capture</div><div class="kv" style="color:var(--acc)" id="r-pct">—</div><div class="ksub">Charged vs rack</div><div class="ks" style="background:var(--acc)"></div></div>
+      </div>
+      <div class="g2">
+        <div class="card"><div class="ch">Rack vs Charged by Unit Type</div><canvas id="ruchart" style="max-height:260px"></canvas></div>
+        <div class="card"><div class="ch">Top 10 Companies by Revenue</div><canvas id="rcochart" style="max-height:260px"></canvas></div>
+      </div>
+    </div>
+
+    <!-- AUTO-UPDATE TAB -->
+    <div id="tab-auto" class="tp">
+      <div class="email-card">
+        <div class="email-hd">⚡ Automate Daily Dashboard Updates from Email</div>
+        <div class="email-sub">Your helpdesk sends the Excel report to your inbox every day. Here are 3 options to make the dashboard update automatically — ranked by ease of setup. As a CFO with Odoo + IT background, Option 2 or 3 will give you the most control.</div>
+
+        <div class="opt-row">
+          <div class="opt-card">
+            <div class="opt-icon">📧</div>
+            <div class="opt-name">Gmail + Google Apps Script</div>
+            <div class="opt-desc">Script watches your inbox, finds the daily Excel, parses it, and updates your GitHub Pages dashboard automatically every morning at 7am.</div>
+            <span class="opt-badge free">Free</span>
+            <span class="opt-badge easy">No server needed</span>
+          </div>
+          <div class="opt-card">
+            <div class="opt-icon">🔄</div>
+            <div class="opt-name">Make.com (Zapier alternative)</div>
+            <div class="opt-desc">Connect Gmail → Parse Excel → Push to GitHub. Visual no-code flow. Runs automatically when email arrives. Free tier covers daily use.</div>
+            <span class="opt-badge free">Free tier</span>
+            <span class="opt-badge easy">No-code</span>
+          </div>
+          <div class="opt-card">
+            <div class="opt-icon">🐍</div>
+            <div class="opt-name">Python Script on Your Server</div>
+            <div class="opt-desc">Since you run Odoo, you already have a server. A simple Python cron job checks Gmail API, parses the file, rebuilds the dashboard HTML, and pushes to GitHub.</div>
+            <span class="opt-badge pro">Most control</span>
+            <span class="opt-badge free">Free</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch">Option 1 — Gmail + Google Apps Script (Easiest — Zero Cost)</div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <div class="step-title">Open Google Apps Script</div>
+              <div class="step-desc">Go to <strong style="color:var(--acc)">script.google.com</strong> → New Project. This runs inside Google's servers — no computer needed.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <div class="step-title">Paste this script</div>
+              <div class="step-desc">This finds the daily report in Gmail, extracts it, and triggers Claude to rebuild the dashboard:</div>
+              <div class="code-block">function dailyDashboardUpdate() {
+  // Search Gmail for today's report
+  var threads = GmailApp.search(
+    'subject:"Front Office Report" has:attachment newer_than:1d'
+  );
+  
+  if (threads.length === 0) {
+    Logger.log('No report found today');
+    return;
+  }
+  
+  // Get the Excel attachment
+  var msg = threads[0].getMessages()[0];
+  var attachments = msg.getAttachments();
+  var xlsxFile = attachments.find(a => 
+    a.getName().includes('Front_Office_Report')
+  );
+  
+  if (!xlsxFile) return;
+  
+  // Save to Google Drive (shared folder)
+  var folder = DriveApp.getFolderById('YOUR_FOLDER_ID');
+  var file = folder.createFile(xlsxFile);
+  
+  Logger.log('Report saved: ' + file.getName());
+  // → Then upload updated dashboard to GitHub via GitHub API
+}</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <div class="step-title">Set a daily trigger</div>
+              <div class="step-desc">In Apps Script → Triggers → Add Trigger → Time-driven → Day timer → 7:00–8:00 AM. It runs automatically every morning.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <div class="step-title">Push updated dashboard to GitHub</div>
+              <div class="step-desc">The script calls GitHub API to replace your index.html with the fresh data. Your team's URL automatically shows today's report within minutes of receiving the email.</div>
+              <div class="code-block">// GitHub API push (add inside the function above)
+var GITHUB_TOKEN = 'your_token_here';
+var REPO = 'your-username/saken-dashboard';
+
+var response = UrlFetchApp.fetch(
+  'https://api.github.com/repos/' + REPO + '/contents/index.html',
+  {
+    method: 'put',
+    headers: {
+      'Authorization': 'token ' + GITHUB_TOKEN,
+      'Content-Type': 'application/json'
+    },
+    payload: JSON.stringify({
+      message: 'Auto-update: ' + new Date().toDateString(),
+      content: Utilities.base64Encode(newDashboardHTML),
+      sha: currentFileSHA  // get this first with a GET request
+    })
+  }
+);
+Logger.log('Dashboard updated: ' + response.getResponseCode());</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch">Option 2 — Make.com Visual Flow (No-Code)</div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <div class="step-title">Create free account at make.com</div>
+              <div class="step-desc">Make.com is a visual automation platform — like Zapier but more powerful and with a generous free tier (1,000 ops/month, more than enough for daily use).</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <div class="step-title">Build this 4-step scenario</div>
+              <div class="step-desc">
+                <strong>Gmail</strong> (Watch emails with attachment) →
+                <strong>Filter</strong> (subject contains "Front Office Report") →
+                <strong>Claude API</strong> (parse Excel + generate dashboard) →
+                <strong>GitHub</strong> (push updated index.html)
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <div class="step-title">Schedule it</div>
+              <div class="step-desc">Set the scenario to run every day at 7am. From that point, your team's dashboard link auto-refreshes with zero manual effort.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch">Option 3 — Python on Your Odoo Server (Most Powerful)</div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <div class="step-title">Install the Gmail + GitHub libraries</div>
+              <div class="code-block">pip install google-auth google-auth-oauthlib google-api-python-client
+pip install openpyxl pandas PyGithub</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <div class="step-title">Python cron job — runs daily at 7am</div>
+              <div class="code-block">from googleapiclient.discovery import build
+from google.oauth2.credentials import Credentials
+from github import Github
+import pandas as pd, base64, json
+
+def run_daily_update():
+    # 1. Connect to Gmail
+    creds = Credentials.from_authorized_user_file('token.json')
+    gmail = build('gmail', 'v1', credentials=creds)
+    
+    # 2. Find today's report
+    result = gmail.users().messages().list(
+        userId='me',
+        q='subject:"Front Office Report" newer_than:1d has:attachment'
+    ).execute()
+    
+    msg_id = result['messages'][0]['id']
+    msg = gmail.users().messages().get(userId='me', id=msg_id).execute()
+    
+    # 3. Download the Excel attachment
+    for part in msg['payload']['parts']:
+        if 'xlsx' in part['filename']:
+            data = gmail.users().messages().attachments().get(
+                userId='me', messageId=msg_id,
+                id=part['body']['attachmentId']
+            ).execute()
+            xlsx_data = base64.urlsafe_b64decode(data['data'])
+            break
+    
+    # 4. Parse + rebuild dashboard
+    # ... (same logic as Claude does — parse IDS, F.O.R., etc.)
+    new_html = build_dashboard(xlsx_data)
+    
+    # 5. Push to GitHub
+    g = Github('YOUR_GITHUB_TOKEN')
+    repo = g.get_repo('username/saken-dashboard')
+    file = repo.get_contents('index.html')
+    repo.update_file('index.html',
+        f'Auto-update {date.today()}',
+        new_html, file.sha)
+    print('Dashboard updated successfully')
+
+# Add to crontab: 0 7 * * * python3 /path/to/daily_update.py</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="background:linear-gradient(135deg,#0e2218,#0e1623);border-color:rgba(16,185,129,.3)">
+        <div class="ch" style="color:var(--gr)">💡 CFO Recommendation</div>
+        <div style="font-size:13px;color:var(--mu2);line-height:1.8">
+          Given your Odoo server + IT background: <strong style="color:var(--tx)">start with Option 1 (Google Apps Script)</strong> — it takes 30 minutes to set up, costs nothing, and requires no server maintenance.<br><br>
+          Once the flow is stable, migrate to <strong style="color:var(--tx)">Option 3 (Python on your Odoo server)</strong> — this gives you full control, lets you integrate directly with your Odoo data (occupancy vs invoicing), and sets the foundation for an AI-driven property management module you could productize as part of your IT business.
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /cnt -->
+</div>
+
+<!-- TOOLTIP -->
+<div class="mtt" id="mtt">
+  <div class="mtt-iso" id="mtt-iso"></div>
+  <div class="mtt-name" id="mtt-name"></div>
+  <div class="mtt-pax" id="mtt-pax"></div>
+</div>
+
+<script>
+const GUESTS   = [{"room": "2204", "name": "Mr Nayef Abdulrahman", "seg": "Long Stay", "co": "Deloitte and Touche & Co.", "doa": "01/07", "dod": "30/06", "nat": "SAU", "pax": 1, "type": "STU", "status": "LST", "rack": 800.0, "charged": 123.62, "nett": 123.62, "sob": "Corporate"}, {"room": "2307", "name": "MS. NOORA MESHAL ABDULLA  MOHAMED AHMED ALBAQSHI", "seg": "Long Stay", "co": "Dar Al Riyadh", "doa": "01/11", "dod": "31/10", "nat": "BHR", "pax": 1, "type": "STU", "status": "LST", "rack": 800.0, "charged": 115.38, "nett": 115.38, "sob": "Corporate"}, {"room": "2313", "name": "MS. ROAA KHALED M. ALADAB", "seg": "Long Stay", "co": "GS Construction Arabia So", "doa": "10/09", "dod": "09/09", "nat": "SAU", "pax": 1, "type": "STU", "status": "SSG", "rack": 800.0, "charged": 109.89, "nett": 109.89, "sob": "Corporate"}, {"room": "A-03", "name": "COM ARM", "seg": "Long Stay", "co": "ARABIAN RIG MANUFACTURING", "doa": "03/09", "dod": "31/12", "nat": "SAU", "pax": 1, "type": "4BR", "status": "LST", "rack": 1500.0, "charged": 0.0, "nett": 0.0, "sob": "Corporate"}, {"room": "A1", "name": "MR. SUNG HO YOON", "seg": "Long Stay", "co": "SGC Arabia Company Limite", "doa": "05/06", "dod": "04/07", "nat": "KOR", "pax": 2, "type": "2BR", "status": "LST", "rack": 1000.0, "charged": 225.28, "nett": 225.28, "sob": "Corporate"}, {"room": "A4", "name": "MR KIWOONG CHO", "seg": "Long Stay", "co": "SGC Arabia Company Limite", "doa": "12/06", "dod": "11/07", "nat": "KOR", "pax": 2, "type": "2BR", "status": "LST", "rack": 1000.0, "charged": 225.28, "nett": 225.28, "sob": "Corporate"}, {"room": "AA1-1", "name": "MR. KEVIN KUDAZYA MAPETO", "seg": "Long Stay", "co": "SRACO-Consulting Services", "doa": "01/09", "dod": "31/08", "nat": "ZWE", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 164.83, "nett": 164.83, "sob": "Corporate"}, {"room": "AA1-2", "name": "MR. AJIS CARNAWAN BUDIYANA", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "20/01", "dod": "19/01", "nat": "PHL", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "AA1-3", "name": "Mr Nehme Ruiz", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "03/06", "dod": "02/12", "nat": "ESP", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 157.14, "nett": 157.14, "sob": "Corporate"}, {"room": "AA1-5", "name": "MR. SUJESH  KAPPADAN", "seg": "Long Stay", "co": "SUBSEA7", "doa": "22/04", "dod": "21/04", "nat": "IND", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 151.09, "nett": 151.09, "sob": "Corporate"}, {"room": "AA1-6", "name": "MR. MANUEL GARCIA GAROZ", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "01/11", "dod": "31/10", "nat": "ESP", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "AA1-7", "name": "MR. SHEHABELDIN MOUSTAFA SALEH MOHAMED", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "15/09", "dod": "14/09", "nat": "EGY", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "AA1-8", "name": "MR. VINEETH PULICKAL VIDYADHARAN", "seg": "Long Stay", "co": "SUBSEA7", "doa": "22/04", "dod": "21/04", "nat": "IND", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 151.09, "nett": 151.09, "sob": "Corporate"}, {"room": "AA2-1", "name": "MR. JORGE RUBIO HERNANDEZ", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "12/07", "dod": "11/07", "nat": "ESP", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "AA2-2", "name": "MR. ABDUL REHMAN AFZAL", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "19/06", "dod": "18/06", "nat": "PAK", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "AA2-3", "name": "MR. MAROUF MAHMOUD HASSAN ALY ELATIUR", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "01/03", "dod": "28/02", "nat": "EGY", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "AA2-4", "name": "MR. ROBERTO NAJERA GARCIA", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "07/07", "dod": "06/07", "nat": "ESP", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "AA2-6", "name": "MR. MANUEL JOSE BOO ACUNA", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "02/12", "dod": "01/12", "nat": "ESP", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "AA2-7", "name": "MS. BEATRIZ ROYO ZHANG", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "02/09", "dod": "31/08", "nat": "ESP", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 157.3, "nett": 157.3, "sob": "Corporate"}, {"room": "AA2-8", "name": "MR. SONER  YUKSEL", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "08/02", "dod": "07/02", "nat": "TUR", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "B1", "name": "MR. CAMILLUS BUJANG ANAK", "seg": "Short Stay", "co": "SUBSEA7", "doa": "02/05", "dod": "30/04", "nat": "IND", "pax": 2, "type": "2BR", "status": "SSG", "rack": 1000.0, "charged": 220.38, "nett": 220.38, "sob": "Corporate"}, {"room": "B2", "name": "MR. QUAH CHIN LEONG", "seg": "Long Stay", "co": "SUBSEA7", "doa": "02/05", "dod": "30/04", "nat": "MYS", "pax": 2, "type": "2BR", "status": "LST", "rack": 1000.0, "charged": 220.38, "nett": 220.38, "sob": "Corporate"}, {"room": "B3", "name": "MR HYUNGIL  JEON", "seg": "Long Stay", "co": "Nasser Al-Hajri Company", "doa": "19/06", "dod": "18/12", "nat": "KOR", "pax": 2, "type": "2BR", "status": "LST", "rack": 1000.0, "charged": 233.51, "nett": 233.51, "sob": "Corporate"}, {"room": "BB1-3", "name": "Mr Johannes Hermanus Leonar", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "31/05", "dod": "30/05", "nat": "ZAF", "pax": 1, "type": "1BR", "status": "", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "BB1-5", "name": "MR. LEVENT  DERELI", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "03/05", "dod": "02/05", "nat": "TUR", "pax": 1, "type": "1BR", "status": "SSG", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "BB1-6", "name": "MR. ISMAEL MEZIANE KAMOUNI", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "27/10", "dod": "26/10", "nat": "ESP", "pax": 1, "type": "1BR", "status": "SSG", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "BB1-7", "name": "MR. ALI  SAJJAD", "seg": "Long Stay", "co": "SUBSEA7", "doa": "02/05", "dod": "30/04", "nat": "PAK", "pax": 1, "type": "1BR", "status": "SSG", "rack": 800.0, "charged": 151.51, "nett": 151.51, "sob": "Corporate"}, {"room": "BB1-8", "name": "MR. JUN HEE CHOI", "seg": "Long Stay", "co": "SGC Arabia Company Limite", "doa": "18/06", "dod": "17/07", "nat": "KOR", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 163.36, "nett": 163.36, "sob": "Corporate"}, {"room": "BB2-2", "name": "MR. AHMET  DURSUN", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "05/01", "dod": "04/01", "nat": "TUR", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "BB2-3", "name": "MR. LYES  DIGUER", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "01/09", "dod": "31/08", "nat": "DZA", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "BB2-4", "name": "MR. ALI  OZEL", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "15/11", "dod": "14/11", "nat": "TUR", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "BB2-5", "name": "MR. WAN WOO LEE", "seg": "Long Stay", "co": "SGC Arabia Company Limite", "doa": "02/07", "dod": "01/08", "nat": "KOR", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 157.91, "nett": 157.91, "sob": "Corporate"}, {"room": "BB2-6", "name": "Mr Ricardo Santias Palacios", "seg": "Short Stay", "co": "Tecnicas Reunidas Saudia", "doa": "21/05", "dod": "20/07", "nat": "ESP", "pax": 1, "type": "1BR", "status": "", "rack": 800.0, "charged": 190.0, "nett": 190.0, "sob": "Corporate"}, {"room": "BB2-7", "name": "MR. JUAN CARLOS GARCIA MEJIA", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "13/03", "dod": "12/01", "nat": "ESP", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 166.55, "nett": 166.55, "sob": "Corporate"}, {"room": "BB2-8", "name": "MR. CARLOS TORRENTS BOSCH", "seg": "Long Stay", "co": "SADARA  INDEPENDENT", "doa": "02/05", "dod": "01/11", "nat": "ESP", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 169.39, "nett": 169.39, "sob": "Corporate"}, {"room": "CC1-2", "name": "MR. MIGUEL BLASCO CASTANO", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "15/09", "dod": "14/09", "nat": "ESP", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "CC1-3", "name": "MR. ROLLY PAJI ARAMBALA", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "19/09", "dod": "18/09", "nat": "PHL", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "CC1-4", "name": "Mrs Rea Skuflic", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "29/11", "dod": "28/11", "nat": "ASM", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "CC1-6", "name": "MR. Wilson Watths Trujillo", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "15/09", "dod": "14/09", "nat": "COL", "pax": 1, "type": "1BR", "status": "SSG", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "CC1-8", "name": "MR. TAEYOUNG  HWANG", "seg": "Long Stay", "co": "Samyoung Saudi Arabia Co", "doa": "12/09", "dod": "11/09", "nat": "KOR", "pax": 2, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 151.09, "nett": 151.09, "sob": "Corporate"}, {"room": "CC2-2", "name": "MR. SANTIAGO TRINCADO DE LA ROCHA", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "02/07", "dod": "01/07", "nat": "ESP", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "CC2-3", "name": "MR. JESUS EDUARDO JUNIOR ALVARADO ECHEVERRIA", "seg": "Long Stay", "co": "Nesma & Partners Contract", "doa": "10/10", "dod": "09/10", "nat": "COL", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 164.83, "nett": 164.83, "sob": "Corporate"}, {"room": "CC2-4", "name": "Mr Jorge Alonso Sanz", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "09/07", "dod": "08/07", "nat": "ESP", "pax": 1, "type": "1BR", "status": "", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "CC2-5", "name": "MR. ALY MORSY ALY MORSY", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "15/09", "dod": "13/09", "nat": "EGY", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 157.3, "nett": 157.3, "sob": "Corporate"}, {"room": "CC2-6", "name": "MR CARLOS RUIZ CAMPOS", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "01/06", "dod": "31/05", "nat": "ESP", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "CC2-7", "name": "MR. WOOSUNG  AHN", "seg": "Long Stay", "co": "SGC Arabia Company Limite", "doa": "03/07", "dod": "02/08", "nat": "KOR", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 157.91, "nett": 157.91, "sob": "Corporate"}, {"room": "CC2-8", "name": "MS. ANHUI CHEN YU", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "02/11", "dod": "31/10", "nat": "CHN", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 157.3, "nett": 157.3, "sob": "Corporate"}, {"room": "D2", "name": "MR. MOHAMMAD ADIB HASSAN", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "21/06", "dod": "20/09", "nat": "IND", "pax": 1, "type": "2BR", "status": "LST", "rack": 1000.0, "charged": 289.01, "nett": 289.01, "sob": "Corporate"}, {"room": "DD1-1", "name": "MR. ZAFER  SOYTURK", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "04/09", "dod": "03/09", "nat": "TUR", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "DD1-3", "name": "MR. JEEYOUNG  PARK", "seg": "Long Stay", "co": "SGC Arabia Company Limite", "doa": "03/07", "dod": "02/08", "nat": "KOR", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 157.91, "nett": 157.91, "sob": "Corporate"}, {"room": "DD1-4", "name": "MR Mehmet Gukrer", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "01/06", "dod": "31/05", "nat": "ESP", "pax": 1, "type": "1BR", "status": "", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "DD1-6", "name": "Mr Mohammed Ibrahim M Al feh", "seg": "Long Stay", "co": "Kentz", "doa": "07/05", "dod": "06/05", "nat": "SAU", "pax": 1, "type": "1BR", "status": "", "rack": 800.0, "charged": 109.89, "nett": 109.89, "sob": "Corporate"}, {"room": "DD1-7", "name": "Mr Kenan Bakirdag", "seg": "Long Stay", "co": "Tecnimont Arabia Limited", "doa": "10/06", "dod": "09/06", "nat": "TUR", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 0.0, "nett": 0.0, "sob": "Corporate"}, {"room": "DD1-8", "name": "MR. MINHYOUNG  NA", "seg": "Long Stay", "co": "Samyoung Saudi Arabia Co", "doa": "30/01", "dod": "29/01", "nat": "KOR", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 151.09, "nett": 151.09, "sob": "Corporate"}, {"room": "DD2-2", "name": "MR. PEDRO RODRIGUEZ MALAGON", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "09/11", "dod": "08/11", "nat": "ESP", "pax": 1, "type": "1BR", "status": "SSG", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "DD2-3", "name": "MR. FACUNDO RUBEN REAL", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "30/04", "dod": "29/10", "nat": "ARG", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 157.14, "nett": 157.14, "sob": "Corporate"}, {"room": "DD2-4", "name": "MR BURAK SIK", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "27/05", "dod": "26/11", "nat": "TUR", "pax": 1, "type": "1BR", "status": "", "rack": 800.0, "charged": 156.28, "nett": 156.28, "sob": "Corporate"}, {"room": "DD2-5", "name": "MR. EMRE  GENELOY", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "02/04", "dod": "01/04", "nat": "TUR", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "DD2-6", "name": "MR. RITESH  NAYAK", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "15/09", "dod": "14/09", "nat": "IND", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "DD2-7", "name": "MR. MANOKARAN  CHELLATHURAI", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "05/03", "dod": "04/03", "nat": "IND", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "DD2-8", "name": "MR. JAIME NAVA MATEOS", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "01/05", "dod": "30/04", "nat": "ESP", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "E1", "name": "MR. BYUNG-WOOK  LEE", "seg": "Long Stay", "co": "SGC Arabia Company Limite", "doa": "23/06", "dod": "22/07", "nat": "KOR", "pax": 1, "type": "2BR", "status": "LST", "rack": 1000.0, "charged": 225.28, "nett": 225.28, "sob": "Corporate"}, {"room": "E3", "name": "MR JEONGDON JU", "seg": "Long Stay", "co": "SGC Arabia Company Limite", "doa": "08/06", "dod": "07/07", "nat": "KOR", "pax": 2, "type": "2BR", "status": "LST", "rack": 1000.0, "charged": 225.28, "nett": 225.28, "sob": "Corporate"}, {"room": "E4", "name": "MR SUNGJIN LEE", "seg": "Long Stay", "co": "SGC Arabia Company Limite", "doa": "09/06", "dod": "08/07", "nat": "KOR", "pax": 1, "type": "2BR", "status": "LST", "rack": 1000.0, "charged": 225.28, "nett": 225.28, "sob": "Corporate"}, {"room": "EE1-2", "name": "MR. SALIM  IBRAHIMKUTTY", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "20/11", "dod": "19/11", "nat": "IND", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "EE1-3", "name": "MR. JUAN PIERRE VENABLES", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "01/12", "dod": "29/11", "nat": "ZAF", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 157.3, "nett": 157.3, "sob": "Corporate"}, {"room": "EE1-4", "name": "MR. THOMAS RONALD AUGUST", "seg": "Long Stay", "co": "Mammoet KSA Limited Co.", "doa": "30/01", "dod": "29/07", "nat": "AUS", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 194.44, "nett": 194.44, "sob": "Corporate"}, {"room": "EE1-5", "name": "MR. JIHOON  SUN", "seg": "Long Stay", "co": "Samyoung Saudi Arabia Co", "doa": "30/01", "dod": "29/01", "nat": "KOR", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 151.09, "nett": 151.09, "sob": "Corporate"}, {"room": "EE1-7", "name": "MR. EMMANUEL  TUANDO", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "09/04", "dod": "08/04", "nat": "PHL", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "EE1-8", "name": "MR. DAVID THOMAS KEEFE", "seg": "Long Stay", "co": "Al Jubail International W", "doa": "08/10", "dod": "07/10", "nat": "GBR", "pax": 1, "type": "1BR", "status": "SSG", "rack": 800.0, "charged": 178.57, "nett": 178.57, "sob": "Corporate"}, {"room": "EE2-1", "name": "Mr Savas Doksoz", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "16/05", "dod": "15/05", "nat": "TUR", "pax": 1, "type": "1BR", "status": "", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "EE2-2", "name": "MR. LUIS ALBERTO OROZCO", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "20/09", "dod": "19/09", "nat": "ITA", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "EE2-3", "name": "MR. SANGDONG  YU", "seg": "Long Stay", "co": "Samyoung Saudi Arabia Co", "doa": "10/04", "dod": "09/04", "nat": "KOR", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 151.09, "nett": 151.09, "sob": "Corporate"}, {"room": "EE2-4", "name": "MR. BARIS CAN BASMAN", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "19/06", "dod": "18/06", "nat": "TUR", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "EE2-5", "name": "MR. BHARAT  YADAV", "seg": "Long Stay", "co": "SIPCHEM", "doa": "25/11", "dod": "24/11", "nat": "GBR", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 173.07, "nett": 173.07, "sob": "Corporate"}, {"room": "EE2-7", "name": "Mr Aneesh Pillao", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "20/05", "dod": "19/05", "nat": "IND", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "EE2-8", "name": "Mr Levent Tozlu", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "19/05", "dod": "18/05", "nat": "TUR", "pax": 1, "type": "1BR", "status": "", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "F2", "name": "Mr DOKYUN KIM", "seg": "Long Stay", "co": "SGC Arabia Company Limite", "doa": "14/06", "dod": "13/07", "nat": "KOR", "pax": 1, "type": "2BR", "status": "LST", "rack": 1000.0, "charged": 225.28, "nett": 225.28, "sob": "Corporate"}, {"room": "F3", "name": "MR. MUNSOO  JEAN", "seg": "Long Stay", "co": "SGC Arabia Company Limite", "doa": "24/06", "dod": "23/07", "nat": "KOR", "pax": 1, "type": "2BR", "status": "LST", "rack": 1000.0, "charged": 225.28, "nett": 225.28, "sob": "Corporate"}, {"room": "F4", "name": "MR KIKYUNG CHO", "seg": "Long Stay", "co": "SGC Arabia Company Limite", "doa": "08/06", "dod": "07/07", "nat": "KOR", "pax": 2, "type": "2BR", "status": "LST", "rack": 1000.0, "charged": 225.28, "nett": 225.28, "sob": "Corporate"}, {"room": "FF1-1", "name": "Mr Wael Victor Abboud", "seg": "Long Stay", "co": "C.A.T.INTERNATIONAL L.L.C", "doa": "04/06", "dod": "03/06", "nat": "LBN", "pax": 1, "type": "1BR", "status": "", "rack": 800.0, "charged": 173.07, "nett": 173.07, "sob": "Corporate"}, {"room": "FF1-2", "name": "MR. SAMUEL FRAGUA SOMOZA", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "24/01", "dod": "23/01", "nat": "ESP", "pax": 2, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "FF1-3", "name": "MR. JIDONG  LEE", "seg": "Long Stay", "co": "Samyoung Saudi Arabia Co", "doa": "07/04", "dod": "06/04", "nat": "KOR", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 151.09, "nett": 151.09, "sob": "Corporate"}, {"room": "FF1-4", "name": "Mr Youngseo Cho", "seg": "Short Stay", "co": "SGC Arabia Company Limite", "doa": "03/06", "dod": "31/07", "nat": "KOR", "pax": 1, "type": "1BR", "status": "", "rack": 800.0, "charged": 356.52, "nett": 356.52, "sob": "Corporate"}, {"room": "FF1-5", "name": "MR. IBRAHIM ISA YOHANNA", "seg": "Long Stay", "co": "SASREF", "doa": "12/07", "dod": "11/07", "nat": "GBR", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 164.83, "nett": 164.83, "sob": "Corporate"}, {"room": "FF1-6", "name": "MR. FERNANDO ANTONIO DE ABREU DE ABREU", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "12/04", "dod": "11/04", "nat": "PRY", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "FF1-7", "name": "MR. Rajesh Murthy Sivanandam", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "14/01", "dod": "13/01", "nat": "IND", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "FF1-8", "name": "MR. YONGSU  KIM", "seg": "Long Stay", "co": "Samyoung Saudi Arabia Co", "doa": "01/02", "dod": "31/01", "nat": "KOR", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 151.09, "nett": 151.09, "sob": "Corporate"}, {"room": "FF2-2", "name": "Mr. Jean Pierre Miur", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "17/12", "dod": "16/12", "nat": "PHL", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "FF2-3", "name": "MRS. CELIA AGUADO PELLITERO", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "20/04", "dod": "19/04", "nat": "ESP", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "FF2-5", "name": "MR. VALMORE JOSE ROMERO BERMUDEZ", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "16/04", "dod": "15/04", "nat": "ESP", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "FF2-6", "name": "MR. FOUAD MOHAMMED FALLATAH", "seg": "Long Stay", "co": "SASREF", "doa": "01/07", "dod": "30/06", "nat": "SAU", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 178.57, "nett": 178.57, "sob": "Corporate"}, {"room": "FF2-7", "name": "MR SUDHEER  SREENIVASAN", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "10/06", "dod": "09/09", "nat": "IND", "pax": 1, "type": "1BR", "status": "SSG", "rack": 800.0, "charged": 182.41, "nett": 182.41, "sob": "Corporate"}, {"room": "G1", "name": "MR. JALEEL PALA VISWAMBHARAN", "seg": "Long Stay", "co": "SUBSEA7", "doa": "02/05", "dod": "30/04", "nat": "IND", "pax": 2, "type": "2BR", "status": "LST", "rack": 1000.0, "charged": 220.38, "nett": 220.38, "sob": "Corporate"}, {"room": "G2", "name": "MR HYEONGMO  JANG", "seg": "Long Stay", "co": "SGC Arabia Company Limite", "doa": "15/06", "dod": "14/07", "nat": "KOR", "pax": 2, "type": "2BR", "status": "LST", "rack": 1000.0, "charged": 225.28, "nett": 225.28, "sob": "Corporate"}, {"room": "G3", "name": "MR JAESEUNG BAN", "seg": "Long Stay", "co": "SGC Arabia Company Limite", "doa": "12/06", "dod": "11/07", "nat": "KOR", "pax": 2, "type": "2BR", "status": "LST", "rack": 1000.0, "charged": 225.28, "nett": 225.28, "sob": "Corporate"}, {"room": "GG1-3", "name": "MR. QUN  QUAN", "seg": "Long Stay", "co": "Tetra Tech Inc", "doa": "10/02", "dod": "09/02", "nat": "USA", "pax": 1, "type": "2BR", "status": "SSG", "rack": 1000.0, "charged": 274.72, "nett": 274.72, "sob": "Corporate"}, {"room": "GG1-4", "name": "Mr Mohamed Ibrahim Habash", "seg": "Short Stay", "co": "ARAMCO", "doa": "06/06", "dod": "05/07", "nat": "SAU", "pax": 1, "type": "2BR", "status": "", "rack": 1000.0, "charged": 270.84, "nett": 270.84, "sob": "Corporate"}, {"room": "GG2-3", "name": "Mr Escalona Evangelista Oliv", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "11/06", "dod": "10/06", "nat": "PHL", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "GG2-4", "name": "MR. JOSE MANUEL HUGO MARQUEZ", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "20/06", "dod": "19/06", "nat": "ESP", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "GG2-5", "name": "MR UTHEN DANGMALEE", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "27/05", "dod": "26/05", "nat": "THA", "pax": 1, "type": "1BR", "status": "", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "GG3-1", "name": "MR. RITESH  NAYAK", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "07/08", "dod": "06/08", "nat": "IDN", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "GG3-2", "name": "MR. BERNHEL JAN GALANG GELERA", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "19/04", "dod": "18/10", "nat": "PHL", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 157.14, "nett": 157.14, "sob": "Corporate"}, {"room": "GG3-3", "name": "MR. RAYMOND  MARCELINE", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "01/07", "dod": "30/06", "nat": "PHL", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "GG3-6", "name": "MR. SATHISH KUMAR NATARAJAN", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "01/09", "dod": "31/08", "nat": "IND", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "GG3-7", "name": "Mr Anan Saeliaw", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "06/07", "dod": "05/07", "nat": "THA", "pax": 1, "type": "1BR", "status": "", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "H1", "name": "MR. YOUNGHOON  SONG", "seg": "Long Stay", "co": "SGC Arabia Company Limite", "doa": "29/06", "dod": "28/07", "nat": "KOR", "pax": 1, "type": "2BR", "status": "LST", "rack": 1000.0, "charged": 236.55, "nett": 236.55, "sob": "Corporate"}, {"room": "H2", "name": "MR INSUNG LEE", "seg": "Long Stay", "co": "SGC Arabia Company Limite", "doa": "21/06", "dod": "16/07", "nat": "KOR", "pax": 1, "type": "2BR", "status": "LST", "rack": 1000.0, "charged": 274.4, "nett": 274.4, "sob": "Corporate"}, {"room": "H3", "name": "MR DOBAE  HWANG", "seg": "Long Stay", "co": "SGC Arabia Company Limite", "doa": "22/06", "dod": "21/07", "nat": "KOR", "pax": 1, "type": "2BR", "status": "LST", "rack": 1000.0, "charged": 236.55, "nett": 236.55, "sob": "Corporate"}, {"room": "HH1-1", "name": "MR. KENY JESUS CEDENO", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "01/10", "dod": "30/09", "nat": "VEN", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "HH1-2", "name": "MR. AHMED KHALED ABDULNAFIE ABDELHAFEZ", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "26/04", "dod": "25/04", "nat": "EGY", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "HH1-3", "name": "MR. WALAA MOHAMED ABDELWAHAB MOHAMED", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "26/04", "dod": "25/04", "nat": "EGY", "pax": 1, "type": "1BR", "status": "", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "HH1-6", "name": "MR. PEDRO LEONARDO SANCHEZ AVILES", "seg": "Short Stay", "co": "Tecnicas Reunidas Saudia", "doa": "02/05", "dod": "01/08", "nat": "ESP", "pax": 1, "type": "1BR", "status": "SSG", "rack": 800.0, "charged": 158.62, "nett": 158.62, "sob": "Corporate"}, {"room": "HH1-7", "name": "MR. ALBERTO GOMEZ GARCIA", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "09/05", "dod": "08/11", "nat": "ESP", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.28, "nett": 156.28, "sob": "Corporate"}, {"room": "HH2-2", "name": "MR. GERARDO PITPIT ALIBUYOG", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "29/10", "dod": "28/10", "nat": "PHL", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "HH2-3", "name": "MR. JUAN DIAZ RATO CORCHADO", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "01/05", "dod": "30/04", "nat": "ESP", "pax": 1, "type": "1BR", "status": "SSG", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "HH2-6", "name": "MR. ISLAM FATHY SALEH BADR", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "18/11", "dod": "17/11", "nat": "EGY", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 156.86, "nett": 156.86, "sob": "Corporate"}, {"room": "HH2-7", "name": "Mr Stefano Morazio", "seg": "Long Stay", "co": "Tecnimont Arabia Limited", "doa": "10/06", "dod": "09/06", "nat": "ITA", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 0.0, "nett": 0.0, "sob": "Corporate"}, {"room": "HH3-2", "name": "Mr Paolo Bruzzanti", "seg": "Long Stay", "co": "Tecnimont Arabia Limited", "doa": "10/06", "dod": "09/06", "nat": "ITA", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 0.0, "nett": 0.0, "sob": "Corporate"}, {"room": "HH3-3", "name": "Mr Paolo Pettinari", "seg": "Long Stay", "co": "Tecnimont Arabia Limited", "doa": "10/06", "dod": "09/06", "nat": "ITA", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 0.0, "nett": 0.0, "sob": "Corporate"}, {"room": "HH3-6", "name": "MR. SINISA  TOMASEVIC", "seg": "Long Stay", "co": "Tecnimont Arabia Limited", "doa": "02/07", "dod": "01/07", "nat": "HRV", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 0.0, "nett": 0.0, "sob": "Corporate"}, {"room": "HH3-7", "name": "MR. GIACOMO  PATERNO", "seg": "Long Stay", "co": "Tecnimont Arabia Limited", "doa": "02/07", "dod": "01/07", "nat": "ITA", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 0.0, "nett": 0.0, "sob": "Corporate"}, {"room": "I2", "name": "MR CHANGWON LEE", "seg": "Long Stay", "co": "SGC Arabia Company Limite", "doa": "16/06", "dod": "15/07", "nat": "KOR", "pax": 2, "type": "2BR", "status": "LST", "rack": 1000.0, "charged": 236.55, "nett": 236.55, "sob": "Corporate"}, {"room": "I4", "name": "MR. MINSOO  CHIN", "seg": "Long Stay", "co": "SGC Arabia Company Limite", "doa": "23/06", "dod": "22/07", "nat": "KOR", "pax": 1, "type": "2BR", "status": "LST", "rack": 1000.0, "charged": 225.28, "nett": 225.28, "sob": "Corporate"}, {"room": "J3", "name": "MR. STEPHANIE CLARE AK NYIPA", "seg": "Long Stay", "co": "Tecnicas Reunidas Saudia", "doa": "14/11", "dod": "13/11", "nat": "MYS", "pax": 2, "type": "2BR", "status": "SSG", "rack": 1000.0, "charged": 243.68, "nett": 243.68, "sob": "Corporate"}, {"room": "K2", "name": "MR. JAEHO  JEONG", "seg": "Long Stay", "co": "SGC Arabia Company Limite", "doa": "10/08", "dod": "09/08", "nat": "KOR", "pax": 4, "type": "2BR", "status": "LST", "rack": 1000.0, "charged": 215.38, "nett": 215.38, "sob": "Corporate"}, {"room": "M1", "name": "MR. AMER SALEM FARAG", "seg": "Long Stay", "co": "SAKEN", "doa": "14/01", "dod": "01/01", "nat": "YEM", "pax": 1, "type": "2BR", "status": "SSG", "rack": 1000.0, "charged": 0.0, "nett": 0.0, "sob": "Corporate"}, {"room": "M2", "name": "MR. HAMEED PODIABBA HASANABBA", "seg": "Long Stay", "co": "Elite Invention Trading E", "doa": "27/12", "dod": "26/12", "nat": "IND", "pax": 1, "type": "2BR", "status": "LST", "rack": 1000.0, "charged": 219.78, "nett": 219.78, "sob": "Corporate"}, {"room": "M3", "name": "MR. HEADMAN SIYANDA SIPHAMANDLA DLAMINI", "seg": "Long Stay", "co": "SAUDI ARAMCO", "doa": "15/02", "dod": "14/02", "nat": "ZAF", "pax": 2, "type": "2BR", "status": "LST", "rack": 1000.0, "charged": 247.25, "nett": 247.25, "sob": "Corporate"}, {"room": "V03", "name": "MR. HAENGYEOL  RYU", "seg": "Long Stay", "co": "HYUNDAI E&C", "doa": "01/08", "dod": "31/07", "nat": "KOR", "pax": 3, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 274.72, "nett": 274.72, "sob": "Corporate"}, {"room": "V04", "name": "MR. HENRY ALEJANDRO ROJAS", "seg": "Long Stay", "co": "SATORP", "doa": "25/02", "dod": "24/02", "nat": "VEN", "pax": 3, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 247.25, "nett": 247.25, "sob": "Corporate"}, {"room": "V05", "name": "MR. CARLOS EDUARDO CORONA GONZALEZ", "seg": "Long Stay", "co": "SATORP", "doa": "27/07", "dod": "26/07", "nat": "VEN", "pax": 4, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 247.25, "nett": 247.25, "sob": "Corporate"}, {"room": "V06", "name": "MR. TAMRIN BIN SHAHIRIN", "seg": "Long Stay", "co": "EX SADARA", "doa": "17/03", "dod": "16/03", "nat": "MYS", "pax": 4, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 247.25, "nett": 247.25, "sob": "Corporate"}, {"room": "V104-A", "name": "Ms Khuloud Aldhalf", "seg": "Long Stay", "co": "Ministry of Defense", "doa": "07/06", "dod": "06/10", "nat": "SAU", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 99.17, "nett": 99.17, "sob": "Walk In"}, {"room": "V105/2", "name": "MR SHEDDI MOHAMMED ABDULRAHI", "seg": "Long Stay", "co": "Sedres trading & marine s", "doa": "12/04", "dod": "11/08", "nat": "JOR", "pax": 1, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 158.39, "nett": 158.39, "sob": "Corporate"}, {"room": "V105", "name": "V105-B Mr Riccardo Menegon", "seg": "Long Stay", "co": "Tecnimont Arabia Limited", "doa": "06/06", "dod": "05/06", "nat": "ITA", "pax": 1, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 0.0, "nett": 0.0, "sob": "Corporate"}, {"room": "V106-A", "name": "MR. PIETER JACOBUS GREYLING", "seg": "Long Stay", "co": "KANOOZ CONTRACTING EST", "doa": "17/11", "dod": "14/11", "nat": "ZAF", "pax": 1, "type": "1BR", "status": "LST", "rack": 1200.0, "charged": 200.54, "nett": 200.54, "sob": "Corporate"}, {"room": "V106-B", "name": "Mr Buonait Gianluigi", "seg": "Long Stay", "co": "Tecnimont Arabia Limited", "doa": "06/06", "dod": "05/06", "nat": "ITA", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 0.0, "nett": 0.0, "sob": "Corporate"}, {"room": "V106-C", "name": "MRS. NORAH MOHAMMED A. ALBINALI", "seg": "Long Stay", "co": "SABIC", "doa": "07/07", "dod": "05/07", "nat": "SAU", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 146.0, "nett": 146.0, "sob": "Corporate"}, {"room": "V109", "name": "MR FAWAD YOUSIF SALEH", "seg": "Long Stay", "co": "Salient Arabia for Milita", "doa": "01/06", "dod": "31/05", "nat": "USA", "pax": 3, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 375.0, "nett": 375.0, "sob": "Corporate"}, {"room": "V110", "name": "MR YASSIN  MUNYE", "seg": "Long Stay", "co": "Salient Arabia for Milita", "doa": "01/06", "dod": "31/05", "nat": "USA", "pax": 3, "type": "3BR", "status": "", "rack": 1200.0, "charged": 375.0, "nett": 375.0, "sob": "Corporate"}, {"room": "V111", "name": "MR. MAHMOUD", "seg": "Long Stay", "co": "Salient Arabia for Milita", "doa": "01/06", "dod": "31/05", "nat": "USA", "pax": 3, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 375.0, "nett": 375.0, "sob": "Corporate"}, {"room": "V112", "name": "ENGR WAEL  WAEL", "seg": "Long Stay", "co": "SAKEN", "doa": "01/08", "dod": "31/12", "nat": "EGY", "pax": 1, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 0.0, "nett": 0.0, "sob": "Corporate"}, {"room": "V113", "name": "Mr Abdi Mohamed", "seg": "Long Stay", "co": "Salient Arabia for Milita", "doa": "01/06", "dod": "31/05", "nat": "USA", "pax": 3, "type": "3BR", "status": "", "rack": 1200.0, "charged": 375.0, "nett": 375.0, "sob": "Corporate"}, {"room": "V115", "name": "MR Talal Mohamed", "seg": "Long Stay", "co": "Salient Arabia for Milita", "doa": "01/06", "dod": "31/05", "nat": "USA", "pax": 3, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 375.0, "nett": 375.0, "sob": "Corporate"}, {"room": "V118", "name": "MR MUHIDIN SHEIKH ALLEN", "seg": "Long Stay", "co": "Salient Arabia for Milita", "doa": "01/06", "dod": "31/05", "nat": "USA", "pax": 3, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 375.0, "nett": 375.0, "sob": "Corporate"}, {"room": "V120", "name": "MR MOHAMED ABDULAHI MOHAMED", "seg": "Long Stay", "co": "Salient Arabia for Milita", "doa": "01/06", "dod": "31/05", "nat": "USA", "pax": 3, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 375.0, "nett": 375.0, "sob": "Corporate"}, {"room": "V121", "name": "MR MICHAEL STEFANO MIGLIORE", "seg": "Long Stay", "co": "Salient Arabia for Milita", "doa": "01/06", "dod": "31/05", "nat": "USA", "pax": 3, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 375.0, "nett": 375.0, "sob": "Corporate"}, {"room": "V13", "name": "MR. TAMER ADEL ABDELNAIM IBRAHIM", "seg": "Long Stay", "co": "King Fahad Specialist Hos", "doa": "01/10", "dod": "30/09", "nat": "EGY", "pax": 4, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 247.25, "nett": 247.25, "sob": "Corporate"}, {"room": "V134", "name": "MR MOHAMMAD FAWZY", "seg": "Long Stay", "co": "SAKEN", "doa": "18/08", "dod": "31/12", "nat": "EGY", "pax": 3, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 0.0, "nett": 0.0, "sob": "Corporate"}, {"room": "V137", "name": "MR. MOHAMMED  NADEEM", "seg": "Long Stay", "co": "SABIC", "doa": "01/07", "dod": "31/12", "nat": "CAN", "pax": 4, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 409.83, "nett": 409.83, "sob": "Corporate"}, {"room": "V14", "name": "MR. MOHAMMAD AHSUN AYOUB SHEIKH", "seg": "Long Stay", "co": "SAUDI ARAMCO", "doa": "25/07", "dod": "24/07", "nat": "GBR", "pax": 4, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 247.25, "nett": 247.25, "sob": "Corporate"}, {"room": "V142", "name": "MR. GUSTAVO ELIAS SUCRE MARCANO", "seg": "Long Stay", "co": "EX SADARA", "doa": "27/06", "dod": "26/06", "nat": "ESP", "pax": 4, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 302.19, "nett": 302.19, "sob": "Corporate"}, {"room": "V156", "name": "MR. AHMED SALEH H. ALBLOWI", "seg": "Short Stay", "co": "ROYAL COMMISSION FOR JUBA", "doa": "01/07", "dod": "31/08", "nat": "SAU", "pax": 1, "type": "3BR", "status": "SSG", "rack": 1200.0, "charged": 285.1, "nett": 285.1, "sob": "Corporate"}, {"room": "V157", "name": "MR. AHMET MEHMET ZEKI BARUT", "seg": "Short Stay", "co": "SABIC", "doa": "01/11", "dod": "31/10", "nat": "TUR", "pax": 3, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 315.93, "nett": 315.93, "sob": "Corporate"}, {"room": "V164", "name": "MR LINDANI MOFFAT BHEKUMUZI", "seg": "Long Stay", "co": "TASNEE", "doa": "27/05", "dod": "26/05", "nat": "ZAF", "pax": 2, "type": "3BR", "status": "", "rack": 1200.0, "charged": 412.08, "nett": 412.08, "sob": "Corporate"}, {"room": "V165", "name": "MR MELIK ALI SPAIN", "seg": "Long Stay", "co": "Salient Arabia for Milita", "doa": "01/06", "dod": "31/05", "nat": "UMI", "pax": 3, "type": "3BR", "status": "", "rack": 1200.0, "charged": 375.0, "nett": 375.0, "sob": "Corporate"}, {"room": "V18/9", "name": "MR. VARUN  SHARMA", "seg": "Long Stay", "co": "Global Al-Suhaimi Company", "doa": "21/06", "dod": "20/06", "nat": "IND", "pax": 1, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 104.39, "nett": 104.39, "sob": "Corporate"}, {"room": "V18", "name": "MR. DAEYUN  KANG", "seg": "Long Stay", "co": "SGC Arabia Company Limite", "doa": "25/06", "dod": "24/07", "nat": "KOR", "pax": 1, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 107.01, "nett": 107.01, "sob": "Corporate"}, {"room": "V18-A", "name": "V18-1 MR. BRUNO MEDINA NUNES", "seg": "Long Stay", "co": "ArcelorMittal Tubular Pro", "doa": "01/04", "dod": "31/03", "nat": "BRA", "pax": 2, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 109.89, "nett": 109.89, "sob": "Corporate"}, {"room": "V18-B", "name": "V18-4 MR ERAMASUBRAMANIAN ILAKSHMA", "seg": "Short Stay", "co": "Gulf Oil Performance Indu", "doa": "13/06", "dod": "12/07", "nat": "IND", "pax": 1, "type": "1BR", "status": "SSG", "rack": 800.0, "charged": 120.68, "nett": 120.68, "sob": "Corporate"}, {"room": "V18-C", "name": "MR V18-5 PRINCE JOHN MATHEW", "seg": "Long Stay", "co": "Naser M. Al-Baddah & Part", "doa": "09/06", "dod": "08/07", "nat": "IND", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 120.68, "nett": 120.68, "sob": "Corporate"}, {"room": "V187", "name": "MR SAHAL HAIBE DIRIR", "seg": "Long Stay", "co": "Salient Arabia for Milita", "doa": "01/06", "dod": "31/05", "nat": "UMI", "pax": 3, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 375.0, "nett": 375.0, "sob": "Corporate"}, {"room": "V189", "name": "MR AFRIM  TRELAK", "seg": "Long Stay", "co": "Salient Arabia for Milita", "doa": "01/06", "dod": "31/05", "nat": "UMI", "pax": 3, "type": "3BR", "status": "", "rack": 1200.0, "charged": 375.0, "nett": 375.0, "sob": "Corporate"}, {"room": "V20-B", "name": "Mr Romanov Dimitry", "seg": "Short Stay", "co": "SGC Arabia Co. Ltd (SEPC)", "doa": "13/06", "dod": "31/07", "nat": "RUS", "pax": 1, "type": "1BR", "status": "", "rack": 800.0, "charged": 144.0, "nett": 144.0, "sob": "Corporate"}, {"room": "V208", "name": "MR MATTHEW JOHN DRAKE", "seg": "Long Stay", "co": "Salient Arabia for Milita", "doa": "01/06", "dod": "31/05", "nat": "USA", "pax": 3, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 375.0, "nett": 375.0, "sob": "Corporate"}, {"room": "V21-A", "name": "MR. SOONSIC  MOON", "seg": "Short Stay", "co": "SGC Arabia Co. Ltd (SEPC)", "doa": "24/06", "dod": "31/07", "nat": "KOR", "pax": 1, "type": "1BR", "status": "SSG", "rack": 800.0, "charged": 144.0, "nett": 144.0, "sob": "Corporate"}, {"room": "V21-C", "name": "Mr Hyoyoung Won", "seg": "Long Stay", "co": "SGC Arabia Co. Ltd (SEPC)", "doa": "07/06", "dod": "31/07", "nat": "KOR", "pax": 1, "type": "1BR", "status": "SSG", "rack": 800.0, "charged": 144.0, "nett": 144.0, "sob": "Corporate"}, {"room": "V22-C", "name": "Mr Saumit Ghosh", "seg": "Short Stay", "co": "SGC Arabia Co. Ltd (SEPC)", "doa": "10/06", "dod": "31/07", "nat": "IND", "pax": 1, "type": "1BR", "status": "", "rack": 800.0, "charged": 144.0, "nett": 144.0, "sob": "Corporate"}, {"room": "V24", "name": "MR. MOHAMED HASSAN HUSSIEN NOUR", "seg": "Long Stay", "co": "SAUDI ARCHIRODON LTD.", "doa": "21/01", "dod": "20/07", "nat": "EGY", "pax": 1, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 277.77, "nett": 277.77, "sob": "Corporate"}, {"room": "V27", "name": "MR. ANDRES AVELINO ALVAREZ MILLAN", "seg": "Long Stay", "co": "Ma'aden Rolling Company", "doa": "08/12", "dod": "07/12", "nat": "VEN", "pax": 4, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 247.25, "nett": 247.25, "sob": "Corporate"}, {"room": "V28", "name": "MR MOHAMED SAMIR ELSAID MITW", "seg": "Long Stay", "co": "SAUDI ARCHIRODON LTD.", "doa": "01/06", "dod": "30/11", "nat": "EGY", "pax": 4, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 274.72, "nett": 274.72, "sob": "Corporate"}, {"room": "V35", "name": "MR. SUKRU ERTAN TUNGA LACIN", "seg": "Long Stay", "co": "SABIC", "doa": "16/08", "dod": "15/08", "nat": "TUR", "pax": 4, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 247.25, "nett": 247.25, "sob": "Corporate"}, {"room": "V36", "name": "MR TANER  SERTER", "seg": "Long Stay", "co": "SADARA  INDEPENDENT", "doa": "09/08", "dod": "08/08", "nat": "TUR", "pax": 3, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 247.25, "nett": 247.25, "sob": "Corporate"}, {"room": "V37", "name": "MR. PEDRO LUIS RODRIGUEZ CABEZA", "seg": "Long Stay", "co": "SAVAGE SAUDI ARABIA", "doa": "30/10", "dod": "29/10", "nat": "VEN", "pax": 4, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 260.98, "nett": 260.98, "sob": "Corporate"}, {"room": "V38", "name": "MR. MICHEL YAQUOB SALLUM", "seg": "Long Stay", "co": "MACE Saudi Arabia Co. Ltd", "doa": "01/08", "dod": "31/07", "nat": "LBN", "pax": 4, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 274.72, "nett": 274.72, "sob": "Corporate"}, {"room": "V40", "name": "MR. YOOSIN  BOK", "seg": "Long Stay", "co": "SGC Arabia Company Limite", "doa": "01/05", "dod": "30/04", "nat": "KOR", "pax": 2, "type": "3BR", "status": "SSG", "rack": 1200.0, "charged": 269.23, "nett": 269.23, "sob": "Corporate"}, {"room": "V41", "name": "MR. MANUEL ANTONIO SANCHEZ CERMENO", "seg": "Long Stay", "co": "PETROKEMYA", "doa": "01/01", "dod": "31/12", "nat": "VEN", "pax": 4, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 247.25, "nett": 247.25, "sob": "Corporate"}, {"room": "V42", "name": "MR. ABDULLAH  TERKAOUI", "seg": "Long Stay", "co": "Nesma & Partners Contract", "doa": "01/01", "dod": "31/12", "nat": "TUR", "pax": 1, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 247.25, "nett": 247.25, "sob": "Corporate"}, {"room": "V43", "name": "MR KARAM ABDEL KAREEM SAYED", "seg": "Long Stay", "co": "AICI Archirodon JV", "doa": "01/06", "dod": "31/08", "nat": "EGY", "pax": 3, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 329.67, "nett": 329.67, "sob": "Corporate"}, {"room": "V44", "name": "Mr MOHAMED ADEL SOLIMAN MOHA", "seg": "Long Stay", "co": "SABIC", "doa": "01/06", "dod": "31/05", "nat": "EGY", "pax": 3, "type": "3BR", "status": "", "rack": 1200.0, "charged": 247.25, "nett": 247.25, "sob": "Corporate"}, {"room": "V47-D", "name": "MR. GISOO  JANG", "seg": "Short Stay", "co": "SGC Arabia Co. Ltd (SEPC)", "doa": "22/04", "dod": "31/07", "nat": "KOR", "pax": 1, "type": "1BR", "status": "SSG", "rack": 800.0, "charged": 144.0, "nett": 144.0, "sob": "Corporate"}, {"room": "V47-F", "name": "MR Ishaque Khan", "seg": "Short Stay", "co": "SGC Arabia Co. Ltd (SEPC)", "doa": "04/06", "dod": "31/07", "nat": "BGD", "pax": 1, "type": "1BR", "status": "SSG", "rack": 800.0, "charged": 144.0, "nett": 144.0, "sob": "Corporate"}, {"room": "V51", "name": "MR YUNG KEUN KOH", "seg": "Short Stay", "co": "KUMYANG ELECTRIC CO. SAUD", "doa": "05/06", "dod": "04/09", "nat": "KOR", "pax": 3, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 370.88, "nett": 370.88, "sob": "Corporate"}, {"room": "V52", "name": "MR MINSOO JIN", "seg": "Long Stay", "co": "KUMYANG ELECTRIC CO. SAUD", "doa": "11/06", "dod": "10/09", "nat": "KOR", "pax": 1, "type": "3BR", "status": "SSG", "rack": 1200.0, "charged": 370.87, "nett": 370.87, "sob": "Corporate"}, {"room": "V53", "name": "MR. JOSE GREGORIO RAMOS GUIGNAN", "seg": "Long Stay", "co": "PETROKEMYA", "doa": "05/01", "dod": "04/07", "nat": "VEN", "pax": 4, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 250.0, "nett": 250.0, "sob": "Corporate"}, {"room": "V54", "name": "MR. LEELIND TIMOTHY BILLET", "seg": "Long Stay", "co": "SATORP", "doa": "01/04", "dod": "31/03", "nat": "ZAF", "pax": 3, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 260.98, "nett": 260.98, "sob": "Corporate"}, {"room": "V55", "name": "MR. AMMAR  HASAN", "seg": "Long Stay", "co": "Naser M. Al-Baddah & Part", "doa": "01/08", "dod": "31/07", "nat": "IND", "pax": 1, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 247.25, "nett": 247.25, "sob": "Corporate"}, {"room": "V56", "name": "MR. HANY SHAWKY RIZK SALAMA", "seg": "Long Stay", "co": "SAUDI ARCHIRODON LTD.", "doa": "01/07", "dod": "30/09", "nat": "EGY", "pax": 1, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 329.67, "nett": 329.67, "sob": "Corporate"}, {"room": "V57", "name": "MR. AHMED ABDELGAWAD SENOUSY ABDELAZIM", "seg": "Long Stay", "co": "SAUDI ARCHIRODON LTD.", "doa": "01/05", "dod": "31/07", "nat": "EGY", "pax": 1, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 329.67, "nett": 329.67, "sob": "Corporate"}, {"room": "V59", "name": "MR. WAEL SAMI SOLIMAN SAADALLA", "seg": "Long Stay", "co": "SAUDI ARCHIRODON LTD.", "doa": "15/01", "dod": "14/07", "nat": "EGY", "pax": 3, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 277.77, "nett": 277.77, "sob": "Corporate"}, {"room": "V60", "name": "MR. AHMED MOHAMED MAHMOUD ABDELGAWAD", "seg": "Long Stay", "co": "SABIC", "doa": "15/11", "dod": "14/11", "nat": "EGY", "pax": 2, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 247.25, "nett": 247.25, "sob": "Corporate"}, {"room": "V62", "name": "MR. JUAN DE DIOS APONTE SALAZAR", "seg": "Long Stay", "co": "SATORP", "doa": "17/10", "dod": "16/10", "nat": "VEN", "pax": 4, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 274.72, "nett": 274.72, "sob": "Corporate"}, {"room": "V63", "name": "MR. VICTOR ENRIQUE LUZARDO RAMONES", "seg": "Long Stay", "co": "Air Products - QUDRA (BHI", "doa": "28/01", "dod": "27/01", "nat": "VEN", "pax": 2, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 247.25, "nett": 247.25, "sob": "Corporate"}, {"room": "V68", "name": "MR. CARLOS ALBERTO GONZALEZ CASTELLANO", "seg": "Long Stay", "co": "SABIC", "doa": "12/01", "dod": "11/01", "nat": "VEN", "pax": 4, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 247.25, "nett": 247.25, "sob": "Corporate"}, {"room": "V70", "name": "MR STEVEN SION BATISTA", "seg": "Long Stay", "co": "ADK Limited", "doa": "06/06", "dod": "05/06", "nat": "KOR", "pax": 2, "type": "3BR", "status": "", "rack": 1200.0, "charged": 247.25, "nett": 247.25, "sob": "Corporate"}, {"room": "V71", "name": "MR JAEYOUNG CHOI", "seg": "Long Stay", "co": "KUMYANG ELECTRIC CO. SAUD", "doa": "24/05", "dod": "23/11", "nat": "KOR", "pax": 3, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 368.85, "nett": 368.85, "sob": "Corporate"}, {"room": "V72", "name": "MR. JOONGGIL  SA", "seg": "Long Stay", "co": "KUMYANG ELECTRIC CO. SAUD", "doa": "24/04", "dod": "23/07", "nat": "KOR", "pax": 2, "type": "3BR", "status": "SSG", "rack": 1200.0, "charged": 375.0, "nett": 375.0, "sob": "Corporate"}, {"room": "V73", "name": "Mr BOYOUNG JUNG", "seg": "Long Stay", "co": "KUMYANG ELECTRIC CO. SAUD", "doa": "12/05", "dod": "11/11", "nat": "KOR", "pax": 3, "type": "3BR", "status": "", "rack": 1200.0, "charged": 368.85, "nett": 368.85, "sob": "Corporate"}, {"room": "V76", "name": "MR. KYEONGJO  CHO", "seg": "Long Stay", "co": "KUMYANG ELECTRIC CO. SAUD", "doa": "28/02", "dod": "28/08", "nat": "KOR", "pax": 3, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 372.92, "nett": 372.92, "sob": "Corporate"}, {"room": "V80-B", "name": "MRS. DANIELA ALEXANDRA DA SILVA FERNANDES", "seg": "Long Stay", "co": "Tecnimont Arabia Limited", "doa": "15/06", "dod": "11/06", "nat": "PRT", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 0.0, "nett": 0.0, "sob": "Corporate"}, {"room": "V81-B", "name": "MR. PAOLO  BAGOLI", "seg": "Long Stay", "co": "Tecnimont Arabia Limited", "doa": "16/06", "dod": "15/06", "nat": "ITA", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 0.0, "nett": 0.0, "sob": "Corporate"}, {"room": "V82-B", "name": "MR. CARLOS MARCOS GENCHI", "seg": "Long Stay", "co": "Tecnimont Arabia Limited", "doa": "25/06", "dod": "24/06", "nat": "ITA", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 0.0, "nett": 0.0, "sob": "Corporate"}, {"room": "V83", "name": "MR. ATTILA LAJOS KISS", "seg": "Long Stay", "co": "Tecnimont Arabia Limited", "doa": "25/06", "dod": "24/06", "nat": "HUN", "pax": 1, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 0.0, "nett": 0.0, "sob": "Corporate"}, {"room": "V84-B", "name": "MR. EGOR  LAPIN", "seg": "Long Stay", "co": "Tecnimont Arabia Limited", "doa": "26/06", "dod": "25/06", "nat": "RUS", "pax": 1, "type": "1BR", "status": "LST", "rack": 800.0, "charged": 0.0, "nett": 0.0, "sob": "Corporate"}, {"room": "V85", "name": "MR. RODI  BAGIS", "seg": "Long Stay", "co": "Tecnimont Arabia Limited", "doa": "26/06", "dod": "25/06", "nat": "TUR", "pax": 1, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 0.0, "nett": 0.0, "sob": "Corporate"}, {"room": "V86", "name": "MR. SIMONE  VESCO", "seg": "Long Stay", "co": "Tecnimont Arabia Limited", "doa": "26/06", "dod": "25/06", "nat": "ITA", "pax": 1, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 0.0, "nett": 0.0, "sob": "Corporate"}, {"room": "V174", "name": "MR. SAMI  HADDAD", "seg": "Short Stay", "co": "SAKEN", "doa": "14/05", "dod": "31/12", "nat": "LBN", "pax": 1, "type": "3BR", "status": "", "rack": 1000.0, "charged": 0.0, "nett": 0.0, "sob": "Corporate"}, {"room": "V197", "name": "MR. ABDULAZIZ BIN SALEH BIN ABDUL WAHHA AL MOUSA", "seg": "Long Stay", "co": "SAKEN", "doa": "29/05", "dod": "31/12", "nat": "SAU", "pax": 1, "type": "3BR", "status": "LST", "rack": 1200.0, "charged": 0.0, "nett": 0.0, "sob": "Corporate"}, {"room": "CASHCC", "name": "MR SAKEN CASH CLIENT", "seg": "Long Stay", "co": "CASH CLIENT", "doa": "20/05", "dod": "20/05", "nat": "SAU", "pax": 1, "type": "1BR", "status": "", "rack": 800.0, "charged": 0.0, "nett": 0.0, "sob": "Corporate"}, {"room": "PM01", "name": "M/S SADARA", "seg": "TravelAgnt", "co": "SADARA", "doa": "25/12", "dod": "31/12", "nat": "SAU", "pax": 1, "type": "", "status": "", "rack": 0.0, "charged": 0.0, "nett": 0.0, "sob": "Walk In"}, {"room": "PM02", "name": "M/S SIEMENS", "seg": "TravelAgnt", "co": "SIEMENS", "doa": "25/12", "dod": "31/12", "nat": "SAU", "pax": 1, "type": "", "status": "", "rack": 0.0, "charged": 0.0, "nett": 0.0, "sob": "Walk In"}, {"room": "PM03", "name": "M/S EZCARETECH", "seg": "TravelAgnt", "co": "EZCARETECH", "doa": "25/12", "dod": "31/12", "nat": "SAU", "pax": 1, "type": "", "status": "", "rack": 0.0, "charged": 0.0, "nett": 0.0, "sob": "Walk In"}, {"room": "PM04", "name": "M/S ABB", "seg": "TravelAgnt", "co": "ABB", "doa": "25/12", "dod": "31/12", "nat": "SAU", "pax": 1, "type": "", "status": "", "rack": 0.0, "charged": 0.0, "nett": 0.0, "sob": "Walk In"}, {"room": "PM05", "name": "M/S TECNICAS", "seg": "TravelAgnt", "co": "TECNICAS REUNIDAS SAUDI F", "doa": "25/12", "dod": "31/12", "nat": "SAU", "pax": 1, "type": "", "status": "", "rack": 0.0, "charged": 0.0, "nett": 0.0, "sob": "Walk In"}, {"room": "PM06", "name": "M/S SUBSEA7", "seg": "TravelAgnt", "co": "SUBSEA7", "doa": "25/12", "dod": "31/12", "nat": "SAU", "pax": 1, "type": "", "status": "", "rack": 0.0, "charged": 0.0, "nett": 0.0, "sob": "Walk In"}, {"room": "PM07", "name": "PM SABIC  SABIC", "seg": "TravelAgnt", "co": "", "doa": "01/02", "dod": "31/12", "nat": "SAU", "pax": 1, "type": "", "status": "", "rack": 0.0, "charged": 0.0, "nett": 0.0, "sob": "Walk In"}, {"room": "PM08", "name": "PM08 KRATOS  KRATOS", "seg": "TravelAgnt", "co": "", "doa": "28/02", "dod": "31/12", "nat": "SAU", "pax": 1, "type": "", "status": "", "rack": 0.0, "charged": 0.0, "nett": 0.0, "sob": "Walk In"}];
+const COMPANIES= [{"name": "Tecnicas Reunidas Saudia", "rooms": 70, "pax": 72, "rack": 56400.0, "charged": 11270.75}, {"name": "SGC Arabia Company Limite", "rooms": 23, "pax": 34, "rack": 22400.0, "charged": 5047.36}, {"name": "Tecnimont Arabia Limited", "rooms": 15, "pax": 15, "rack": 13600.0, "charged": 0.0}, {"name": "Salient Arabia for Milita", "rooms": 12, "pax": 36, "rack": 14400.0, "charged": 4500.0}, {"name": "SUBSEA7", "rooms": 7, "pax": 10, "rack": 5400.0, "charged": 1114.83}, {"name": "SABIC", "rooms": 7, "pax": 21, "rack": 8000.0, "charged": 1860.76}, {"name": "Samyoung Saudi Arabia Co", "rooms": 6, "pax": 7, "rack": 4800.0, "charged": 906.54}, {"name": "SGC Arabia Co. Ltd (SEPC)", "rooms": 6, "pax": 6, "rack": 4800.0, "charged": 864.0}, {"name": "KUMYANG ELECTRIC CO. SAUD", "rooms": 6, "pax": 15, "rack": 7200.0, "charged": 2227.37}, {"name": "SAKEN", "rooms": 5, "pax": 7, "rack": 5600.0, "charged": 0.0}, {"name": "SAUDI ARCHIRODON LTD.", "rooms": 5, "pax": 10, "rack": 6000.0, "charged": 1489.6}, {"name": "SATORP", "rooms": 4, "pax": 14, "rack": 4800.0, "charged": 1030.2}, {"name": "SADARA  INDEPENDENT", "rooms": 2, "pax": 4, "rack": 2000.0, "charged": 416.64}, {"name": "Nesma & Partners Contract", "rooms": 2, "pax": 2, "rack": 2000.0, "charged": 412.08}, {"name": "SASREF", "rooms": 2, "pax": 2, "rack": 1600.0, "charged": 343.4}, {"name": "SAUDI ARAMCO", "rooms": 2, "pax": 6, "rack": 2200.0, "charged": 494.5}, {"name": "EX SADARA", "rooms": 2, "pax": 8, "rack": 2400.0, "charged": 549.44}, {"name": "Naser M. Al-Baddah & Part", "rooms": 2, "pax": 2, "rack": 2000.0, "charged": 367.93}, {"name": "PETROKEMYA", "rooms": 2, "pax": 8, "rack": 2400.0, "charged": 497.25}, {"name": "Deloitte and Touche & Co.", "rooms": 1, "pax": 1, "rack": 800.0, "charged": 123.62}, {"name": "Dar Al Riyadh", "rooms": 1, "pax": 1, "rack": 800.0, "charged": 115.38}, {"name": "GS Construction Arabia So", "rooms": 1, "pax": 1, "rack": 800.0, "charged": 109.89}, {"name": "ARABIAN RIG MANUFACTURING", "rooms": 1, "pax": 1, "rack": 1500.0, "charged": 0.0}, {"name": "SRACO-Consulting Services", "rooms": 1, "pax": 1, "rack": 800.0, "charged": 164.83}, {"name": "Nasser Al-Hajri Company", "rooms": 1, "pax": 2, "rack": 1000.0, "charged": 233.51}, {"name": "Kentz", "rooms": 1, "pax": 1, "rack": 800.0, "charged": 109.89}, {"name": "Mammoet KSA Limited Co.", "rooms": 1, "pax": 1, "rack": 800.0, "charged": 194.44}, {"name": "Al Jubail International W", "rooms": 1, "pax": 1, "rack": 800.0, "charged": 178.57}, {"name": "SIPCHEM", "rooms": 1, "pax": 1, "rack": 800.0, "charged": 173.07}, {"name": "C.A.T.INTERNATIONAL L.L.C", "rooms": 1, "pax": 1, "rack": 800.0, "charged": 173.07}, {"name": "Tetra Tech Inc", "rooms": 1, "pax": 1, "rack": 1000.0, "charged": 274.72}, {"name": "ARAMCO", "rooms": 1, "pax": 1, "rack": 1000.0, "charged": 270.84}, {"name": "Elite Invention Trading E", "rooms": 1, "pax": 1, "rack": 1000.0, "charged": 219.78}, {"name": "HYUNDAI E&C", "rooms": 1, "pax": 3, "rack": 1200.0, "charged": 274.72}, {"name": "Ministry of Defense", "rooms": 1, "pax": 1, "rack": 800.0, "charged": 99.17}, {"name": "Sedres trading & marine s", "rooms": 1, "pax": 1, "rack": 1200.0, "charged": 158.39}, {"name": "KANOOZ CONTRACTING EST", "rooms": 1, "pax": 1, "rack": 1200.0, "charged": 200.54}, {"name": "King Fahad Specialist Hos", "rooms": 1, "pax": 4, "rack": 1200.0, "charged": 247.25}, {"name": "ROYAL COMMISSION FOR JUBA", "rooms": 1, "pax": 1, "rack": 1200.0, "charged": 285.1}, {"name": "TASNEE", "rooms": 1, "pax": 2, "rack": 1200.0, "charged": 412.08}, {"name": "Global Al-Suhaimi Company", "rooms": 1, "pax": 1, "rack": 1200.0, "charged": 104.39}, {"name": "ArcelorMittal Tubular Pro", "rooms": 1, "pax": 2, "rack": 800.0, "charged": 109.89}, {"name": "Gulf Oil Performance Indu", "rooms": 1, "pax": 1, "rack": 800.0, "charged": 120.68}, {"name": "Ma'aden Rolling Company", "rooms": 1, "pax": 4, "rack": 1200.0, "charged": 247.25}, {"name": "SAVAGE SAUDI ARABIA", "rooms": 1, "pax": 4, "rack": 1200.0, "charged": 260.98}, {"name": "MACE Saudi Arabia Co. Ltd", "rooms": 1, "pax": 4, "rack": 1200.0, "charged": 274.72}, {"name": "AICI Archirodon JV", "rooms": 1, "pax": 3, "rack": 1200.0, "charged": 329.67}, {"name": "Air Products - QUDRA (BHI", "rooms": 1, "pax": 2, "rack": 1200.0, "charged": 247.25}, {"name": "ADK Limited", "rooms": 1, "pax": 2, "rack": 1200.0, "charged": 247.25}, {"name": "CASH CLIENT", "rooms": 1, "pax": 1, "rack": 800.0, "charged": 0.0}, {"name": "SADARA", "rooms": 1, "pax": 1, "rack": 0.0, "charged": 0.0}, {"name": "SIEMENS", "rooms": 1, "pax": 1, "rack": 0.0, "charged": 0.0}, {"name": "EZCARETECH", "rooms": 1, "pax": 1, "rack": 0.0, "charged": 0.0}, {"name": "ABB", "rooms": 1, "pax": 1, "rack": 0.0, "charged": 0.0}, {"name": "TECNICAS REUNIDAS SAUDI F", "rooms": 1, "pax": 1, "rack": 0.0, "charged": 0.0}];
+const NAT      = {"ARG": {"name": "Argentina", "pax": 1, "rooms": 1}, "ASM": {"name": "Am. Samoa", "pax": 1, "rooms": 1}, "AUS": {"name": "Australia", "pax": 1, "rooms": 1}, "BGD": {"name": "Bangladesh", "pax": 1, "rooms": 1}, "BHR": {"name": "Bahrain", "pax": 1, "rooms": 1}, "BRA": {"name": "Brazil", "pax": 2, "rooms": 1}, "CAN": {"name": "Canada", "pax": 4, "rooms": 1}, "CHN": {"name": "China", "pax": 1, "rooms": 1}, "COL": {"name": "Colombia", "pax": 2, "rooms": 2}, "DZA": {"name": "Algeria", "pax": 1, "rooms": 1}, "EGY": {"name": "Egypt", "pax": 32, "rooms": 17}, "ESP": {"name": "Spain", "pax": 29, "rooms": 25}, "GBR": {"name": "United Kingdom", "pax": 7, "rooms": 4}, "HRV": {"name": "Croatia", "pax": 1, "rooms": 1}, "HUN": {"name": "Hungary", "pax": 1, "rooms": 1}, "IDN": {"name": "Indonesia", "pax": 1, "rooms": 1}, "IND": {"name": "India", "pax": 20, "rooms": 18}, "ITA": {"name": "Italy", "pax": 10, "rooms": 10}, "JOR": {"name": "Jordan", "pax": 1, "rooms": 1}, "KOR": {"name": "South Korea", "pax": 66, "rooms": 41}, "LBN": {"name": "Lebanon", "pax": 5, "rooms": 3}, "MYS": {"name": "Malaysia", "pax": 8, "rooms": 3}, "PAK": {"name": "Pakistan", "pax": 2, "rooms": 2}, "PHL": {"name": "Philippines", "pax": 8, "rooms": 8}, "PRT": {"name": "Portugal", "pax": 1, "rooms": 1}, "PRY": {"name": "Paraguay", "pax": 1, "rooms": 1}, "RUS": {"name": "Russia", "pax": 2, "rooms": 2}, "SAU": {"name": "Saudi Arabia", "pax": 9, "rooms": 19}, "THA": {"name": "Thailand", "pax": 2, "rooms": 2}, "TUR": {"name": "Turkey", "pax": 23, "rooms": 16}, "UMI": {"name": "USA Minor Isl.", "pax": 9, "rooms": 3}, "USA": {"name": "United States", "pax": 28, "rooms": 10}, "VEN": {"name": "Venezuela", "pax": 34, "rooms": 10}, "YEM": {"name": "Yemen", "pax": 1, "rooms": 1}, "ZAF": {"name": "South Africa", "pax": 10, "rooms": 6}, "ZWE": {"name": "Zimbabwe", "pax": 1, "rooms": 1}};
+const OCC      = {"Studio": {"label": "Studio (Hotel)", "s": 0, "l": 3, "t": 3, "u": 36, "o": 0.0833, "b": 3, "f": 0}, "1BD Shared": {"label": "1BD Shared", "s": 7, "l": 0, "t": 7, "u": 60, "o": 0.1167, "b": 7, "f": 0}, "Exec Room": {"label": "Executive Room", "s": 2, "l": 3, "t": 5, "u": 20, "o": 0.25, "b": 4, "f": 1}, "Prem 1BR": {"label": "Premium 1BR", "s": 1, "l": 37, "t": 38, "u": 66, "o": 0.5758, "b": 31, "f": 7}, "Std 1BR": {"label": "Standard 1BR", "s": 0, "l": 63, "t": 63, "u": 66, "o": 0.9545, "b": 61, "f": 2}, "2BR": {"label": "2BR Apartment", "s": 1, "l": 26, "t": 27, "u": 50, "o": 0.54, "b": 22, "f": 5}, "Std 3BR": {"label": "Std Villa 3BR", "s": 0, "l": 36, "t": 36, "u": 57, "o": 0.6316, "b": 0, "f": 36}, "Prem 3BR": {"label": "Prem Villa 3BR", "s": 1, "l": 19, "t": 20, "u": 104, "o": 0.1923, "b": 0, "f": 20}, "SRC": {"label": "SRC (1BR RC)", "s": 0, "l": 181, "t": 181, "u": 188, "o": 0.9628, "b": 181, "f": 0}, "GT": {"label": "Grand Total", "s": 12, "l": 381, "t": 393, "u": 718, "o": 0.4068, "b": 321, "f": 72}};
+const TOPO_MAP = {"032": "ARG", "036": "AUS", "050": "BGD", "048": "BHR", "076": "BRA", "124": "CAN", "156": "CHN", "170": "COL", "012": "DZA", "818": "EGY", "724": "ESP", "250": "FRA", "826": "GBR", "191": "HRV", "348": "HUN", "360": "IDN", "356": "IND", "380": "ITA", "400": "JOR", "410": "KOR", "422": "LBN", "458": "MYS", "586": "PAK", "608": "PHL", "620": "PRT", "600": "PRY", "643": "RUS", "682": "SAU", "764": "THA", "792": "TUR", "840": "USA", "862": "VEN", "887": "YEM", "710": "ZAF", "716": "ZWE"};
+
+const COUTS=[{unit:'A1',co:'SGC - SEPC'},{unit:'V53',co:'Petrokemya'}];
+const CINS =[{unit:'EE16',co:'Tecnimont Arabia'},{unit:'GG26',co:'Tecnicas Reunidas'}];
+const SRC  ={total:188,occ:181,pct:96.28,mtdR:181,mtdRes:272};
+const SAK  ={short:2.04,long:33.96,total:36};
+const COLS =['#ef4444','#3b82f6','#f59e0b','#10b981','#a855f7','#06b6d4','#f97316','#84cc16','#ec4899','#14b8a6','#fbbf24','#60a5fa'];
+
+let CH={}, mapMode='pax', mapBuilt=false;
+
+function showTab(name,btn){
+  document.querySelectorAll('.tp').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+  if(name==='wm'&&!mapBuilt){buildWorldMap();mapBuilt=true;}
+}
+
+function buildKPIs(){
+  const gt=OCC.GT;
+  const tp=Object.values(NAT).reduce((s,v)=>s+v.pax,0);
+  document.getElementById('kpis').innerHTML=[
+    {l:'Overall Occupancy',v:(gt.o*100).toFixed(1)+'%',s:`${gt.t} / ${gt.u} units`,c:'var(--acc)'},
+    {l:'Total Pax',v:tp,s:'Present in all compounds',c:'var(--bl)'},
+    {l:'Long Stay Units',v:gt.l,s:`${(gt.l/gt.t*100).toFixed(0)}% of occupied`,c:'var(--gr)'},
+    {l:'Short Stay Units',v:gt.s,s:`${(gt.s/gt.t*100).toFixed(0)}% of occupied`,c:'#a855f7'},
+    {l:"Today's Check-Outs",v:COUTS.length,s:'Expected departures',c:'var(--rd)'},
+    {l:"Today's Check-Ins",v:CINS.length,s:'Expected arrivals',c:'var(--gr)'},
+  ].map(k=>`<div class="kpi"><div class="kl">${k.l}</div><div class="kv" style="color:${k.c}">${k.v}</div><div class="ksub">${k.s}</div><div class="ks" style="background:${k.c}"></div></div>`).join('');
+}
+
+function buildOcc(){
+  const clr={'Studio':'#a855f7','1BD Shared':'#06b6d4','Exec Room':'#14b8a6','Prem 1BR':'#3b82f6','Std 1BR':'#10b981','2BR':'#f59e0b','Std 3BR':'#f97316','Prem 3BR':'#ef4444','SRC':'#e8a020'};
+  document.getElementById('obbars').innerHTML=['Studio','1BD Shared','Exec Room','Prem 1BR','Std 1BR','2BR','Std 3BR','Prem 3BR','SRC'].map(k=>{
+    const d=OCC[k];if(!d)return'';
+    const p=(d.o*100).toFixed(1);
+    return`<div class="or"><div class="ol" title="${d.label}">${d.label}</div><div class="ot"><div class="of" style="width:${p}%;background:${clr[k]||'#64748b'}"></div></div><div class="op" style="color:${clr[k]||'#64748b'}">${p}%</div><div class="oc">${d.t}/${d.u}</div></div>`;
+  }).join('');
+}
+
+function buildStayMix(){
+  const gt=OCC.GT;
+  if(CH.sm)CH.sm.destroy();
+  CH.sm=new Chart(document.getElementById('smix'),{
+    type:'doughnut',
+    data:{labels:['Long Stay','Short Stay'],datasets:[{data:[gt.l,gt.s],backgroundColor:['#3b82f6','#e8a020'],borderWidth:0,hoverOffset:8}]},
+    options:{responsive:true,cutout:'70%',plugins:{legend:{position:'bottom',labels:{color:'#8ba4c0',font:{size:12},padding:14}},tooltip:{callbacks:{label:c=>` ${c.label}: ${c.raw} units`}}}}
+  });
+}
+
+function buildCOUT(){
+  document.getElementById('coctpill').textContent=COUTS.length;
+  document.getElementById('cictpill').textContent=CINS.length;
+  document.getElementById('colist').innerHTML=COUTS.map(c=>`<div class="ai"><div class="ar">${c.unit}</div><div class="ac">${c.co}</div><span class="abg bout">Check-Out</span></div>`).join('');
+  document.getElementById('cilist').innerHTML=CINS.map(c=>`<div class="ai"><div class="ar">${c.unit}</div><div class="ac">${c.co}</div><span class="abg bin">Check-In</span></div>`).join('');
+}
+
+function buildSRC(){
+  const rr=(l,v,c)=>`<div class="rr"><div class="rl">${l}</div><div class="rv" style="color:${c||'var(--tx)'}">${v}</div></div>`;
+  document.getElementById('srcst').innerHTML=rr('Total SRC Units',SRC.total,'var(--mu2)')+rr('Occupied Units',SRC.occ,'var(--gr)')+rr('Occupancy',SRC.pct.toFixed(1)+'%','var(--acc)')+rr('MTD Rooms Sold',SRC.mtdR,'var(--bl)')+rr('MTD Residents',SRC.mtdRes,'var(--bl)');
+  document.getElementById('sakst').innerHTML=rr('Short Stay %',SAK.short+'%','var(--acc)')+rr('Long Stay %',SAK.long+'%','var(--bl)')+rr('Total Occupancy %',SAK.total+'%','var(--gr)')+rr('Bachelor Units',OCC.GT.b,'var(--mu2)')+rr('Family Units',OCC.GT.f,'var(--mu2)');
+}
+
+
+function setMode(m,btn){
+  mapMode=m;
+  document.querySelectorAll('.mbtn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  if(mapBuilt)updateMapColors();
+}
+function getVal(iso){const d=NAT[iso];if(!d)return 0;return mapMode==='pax'?d.pax:d.rooms;}
+function getMapColor(v,max){
+  if(!v||v===0)return null;
+  const t=v/max;
+  if(t<=0.03)return'#1a3d7a';
+  if(t<=0.08)return'#1e55ab';
+  if(t<=0.18)return'#2272d8';
+  if(t<=0.35)return'#38a8e8';
+  if(t<=0.55)return'#f5c020';
+  if(t<=0.80)return'#e87020';
+  return'#e82020';
+}
+
+function showTT(event, iso){
+  const nat=NAT[iso];
+  if(!nat)return;
+  const tt=document.getElementById('mtt');
+  tt.style.display='block';
+  document.getElementById('mtt-iso').textContent=iso;
+  document.getElementById('mtt-name').textContent=nat.name;
+  document.getElementById('mtt-pax').textContent=nat.pax+' Pax  ·  '+nat.rooms+' Rooms';
+  moveTT(event);
+}
+function moveTT(event){
+  const tt=document.getElementById('mtt');
+  let x=event.clientX+16, y=event.clientY-14;
+  if(x+190>window.innerWidth) x=event.clientX-200;
+  if(y<8) y=8;
+  tt.style.left=x+'px'; tt.style.top=y+'px';
+}
+function hideTT(){document.getElementById('mtt').style.display='none';}
+
+function buildWorldMap(){
+  const container=document.getElementById('map-container');
+  const W=container.clientWidth||920;
+  const H=Math.round(W*0.48);
+  
+  const svg=d3.select('#map-container').html('')
+    .append('svg')
+    .attr('viewBox',`0 0 ${W} ${H}`)
+    .attr('preserveAspectRatio','xMidYMid meet')
+    .style('background','#08111e')
+    .style('width','100%')
+    .style('display','block');
+
+  svg.append('rect').attr('width',W).attr('height',H).attr('fill','#08111e');
+
+  const proj=d3.geoNaturalEarth1().scale(W/6.4).translate([W/2, H/2]);
+  const path=d3.geoPath().projection(proj);
+  const g=svg.append('g');
+
+  // Graticule grid
+  g.append('path').datum(d3.geoGraticule()())
+    .attr('d',path).attr('fill','none')
+    .attr('stroke','#0c1e2f').attr('stroke-width','0.5');
+
+  fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
+  .then(r=>r.json())
+  .then(world=>{
+    const countries=topojson.feature(world, world.objects.countries);
+    const maxVal=Math.max(...Object.values(NAT).map(d=>mapMode==='pax'?d.pax:d.rooms));
+
+    // ── Base country fills ──────────────────────────────────
+    g.selectAll('.cl')
+      .data(countries.features)
+      .enter().append('path')
+      .attr('class','cl')
+      .attr('d',path)
+      .attr('fill',d=>{
+        const iso=TOPO_MAP[String(d.id).padStart(3,'0')];
+        if(!iso||!NAT[iso]) return '#152415';
+        return getMapColor(getVal(iso),maxVal)||'#152415';
+      })
+      .attr('stroke','#1e3a1e').attr('stroke-width','0.4')
+      .attr('data-iso',d=>TOPO_MAP[String(d.id).padStart(3,'0')]||'')
+      .style('cursor',d=>{
+        const iso=TOPO_MAP[String(d.id).padStart(3,'0')];
+        return iso&&NAT[iso]?'pointer':'default';
+      })
+      .on('mousemove',function(event,d){
+        const iso=TOPO_MAP[String(d.id).padStart(3,'0')];
+        if(iso&&NAT[iso]){showTT(event,iso);}
+      })
+      .on('mouseleave',hideTT);
+
+    // Country borders
+    g.append('path')
+      .datum(topojson.mesh(world, world.objects.countries,(a,b)=>a!==b))
+      .attr('fill','none').attr('stroke','#243424').attr('stroke-width','0.5').attr('d',path);
+
+    // ── Bubble markers for each guest country ───────────────
+    const guestLayer=g.append('g').attr('class','guest-layer');
+
+    countries.features.forEach(feat=>{
+      const iso=TOPO_MAP[String(feat.id).padStart(3,'0')];
+      if(!iso||!NAT[iso])return;
+      
+      const v=getVal(iso);
+      const cent=path.centroid(feat);
+      if(!cent||isNaN(cent[0])||isNaN(cent[1]))return;
+      
+      const col=getMapColor(v,maxVal);
+      const r=Math.max(11, Math.min(24, Math.sqrt(v)*3.4));
+      
+      // Outer glow
+      guestLayer.append('circle')
+        .attr('cx',cent[0]).attr('cy',cent[1]).attr('r',r+5)
+        .attr('fill',col).attr('fill-opacity',0.15)
+        .attr('pointer-events','none');
+      
+      // Main bubble
+      guestLayer.append('circle')
+        .attr('class','bubble-main')
+        .attr('cx',cent[0]).attr('cy',cent[1]).attr('r',r)
+        .attr('fill',col).attr('fill-opacity',0.92)
+        .attr('stroke','rgba(255,255,255,0.25)').attr('stroke-width',1)
+        .attr('data-iso',iso)
+        .style('cursor','pointer')
+        .on('mousemove',function(event){showTT(event,iso);})
+        .on('mouseleave',hideTT);
+      
+      // Count label
+      guestLayer.append('text')
+        .attr('x',cent[0]).attr('y',cent[1]+0.5)
+        .attr('text-anchor','middle').attr('dominant-baseline','middle')
+        .attr('fill','white')
+        .attr('font-size',Math.max(7,Math.min(11,r*0.55)))
+        .attr('font-weight','700').attr('font-family','Syne,sans-serif')
+        .attr('pointer-events','none')
+        .attr('data-iso',iso).attr('class','bubble-label')
+        .text(v);
+      
+      // LARGE invisible hit area — covers tiny countries reliably
+      guestLayer.append('circle')
+        .attr('cx',cent[0]).attr('cy',cent[1]).attr('r',Math.max(r+8,18))
+        .attr('fill','transparent').attr('stroke','none')
+        .attr('data-iso',iso)
+        .style('cursor','pointer')
+        .on('mousemove',function(event){showTT(event,iso);})
+        .on('mouseleave',hideTT);
+    });
+
+    // ── Jubail HQ marker ────────────────────────────────────
+    const jc=proj([49.65,26.95]);
+    if(jc&&!isNaN(jc[0])){
+      const jg=g.append('g').attr('class','jubail');
+      // Pulse rings
+      [22,14].forEach((r,i)=>{
+        jg.append('circle')
+          .attr('cx',jc[0]).attr('cy',jc[1]).attr('r',r)
+          .attr('fill','none').attr('stroke','#10b981')
+          .attr('stroke-width',i===0?0.7:1.4)
+          .attr('opacity',i===0?0.2:0.6);
+      });
+      jg.append('circle').attr('cx',jc[0]).attr('cy',jc[1]).attr('r',5)
+        .attr('fill','#10b981').attr('stroke','white').attr('stroke-width',1);
+      jg.append('text')
+        .attr('x',jc[0]+9).attr('y',jc[1]-7)
+        .attr('fill','#10b981').attr('font-size',8)
+        .attr('font-family','Syne,sans-serif').attr('font-weight','700')
+        .attr('pointer-events','none').text('JUBAIL HQ');
+    }
+
+    // Update stats
+    document.getElementById('mst-co').textContent=Object.keys(NAT).length;
+    document.getElementById('mst-px').textContent=Object.values(NAT).reduce((s,d)=>s+d.pax,0);
+  })
+  .catch(()=>{
+    document.getElementById('map-container').innerHTML=
+      '<div style="height:280px;display:flex;align-items:center;justify-content:center;color:var(--mu2);font-size:13px">🌍 Map requires internet — all other tabs work offline</div>';
+  });
+}
+
+function updateMapColors(){
+  const maxVal=Math.max(...Object.values(NAT).map(d=>mapMode==='pax'?d.pax:d.rooms));
+  d3.selectAll('.cl').attr('fill',function(){
+    const iso=this.getAttribute('data-iso');
+    if(!iso||!NAT[iso])return'#152415';
+    return getMapColor(getVal(iso),maxVal)||'#152415';
+  });
+  d3.selectAll('.bubble-main').attr('fill',function(){
+    const iso=this.getAttribute('data-iso');
+    if(!iso||!NAT[iso])return'#1a4a8a';
+    return getMapColor(getVal(iso),Math.max(...Object.values(NAT).map(d=>mapMode==='pax'?d.pax:d.rooms)));
+  });
+  d3.selectAll('.bubble-label').text(function(){
+    const iso=this.getAttribute('data-iso');
+    return (iso&&NAT[iso])?getVal(iso):'';
+  });
+}
+
+
+function buildNatList(){
+  const sorted=Object.entries(NAT).sort((a,b)=>b[1].pax-a[1].pax);
+  const maxP=sorted[0][1].pax;
+  document.getElementById('natlist').innerHTML=sorted.map(([iso,d],i)=>`
+    <div class="ni"><div class="nc">${iso}</div><div class="nn">${d.name}</div>
+    <div class="nbw"><div class="nbf" style="width:${(d.pax/maxP*100).toFixed(0)}%;background:${COLS[i%COLS.length]}"></div></div>
+    <div class="nct" style="color:${COLS[i%COLS.length]}">${d.pax}</div></div>`).join('');
+}
+
+function buildNatBar(){
+  const sorted=Object.entries(NAT).sort((a,b)=>b[1].pax-a[1].pax);
+  if(CH.nb)CH.nb.destroy();
+  CH.nb=new Chart(document.getElementById('natbar'),{
+    type:'bar',
+    data:{labels:sorted.map(([iso])=>iso),datasets:[{data:sorted.map(([,d])=>d.pax),backgroundColor:sorted.map((_,i)=>COLS[i%COLS.length]),borderRadius:5,borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${NAT[sorted[c.dataIndex][0]].name}: ${c.raw} pax`}}},scales:{x:{ticks:{color:'#8ba4c0',font:{size:9}},grid:{display:false}},y:{ticks:{color:'#8ba4c0'},grid:{color:'#1c2d44'}}}}
+  });
+}
+
+let allG=[...GUESTS];
+function buildGuests(){
+  const nats=[...new Set(allG.map(g=>g.nat))].sort();
+  const sel=document.getElementById('fnat');
+  sel.innerHTML='<option value="">All Nationalities</option>';
+  nats.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});
+  document.getElementById('gtpill').textContent=allG.length+' guests';
+  renderG(allG);
+}
+const sc={'Long Stay':'sbl','Short Stay':'sbs'};
+function renderG(gs){
+  document.getElementById('gtbody').innerHTML=gs.map(g=>`<tr>
+    <td style="font-family:Syne,sans-serif;font-weight:700;color:var(--bl)">${g.room}</td>
+    <td style="font-weight:500;font-size:12px">${g.name}</td>
+    <td style="color:var(--mu2);font-size:11px">${g.co}</td>
+    <td><span class="sb ${sc[g.seg]||'sbl'}">${g.seg}</span></td>
+    <td style="color:var(--mu2)">${g.type}</td>
+    <td><span class="ntag">${g.nat}</span></td>
+    <td style="text-align:center">${g.pax}</td>
+    <td style="color:var(--mu2);font-size:11px">${g.doa}</td>
+    <td style="color:var(--mu2);font-size:11px">${g.dod}</td>
+    <td style="font-family:Syne,sans-serif;font-size:12px">${g.rack}</td>
+    <td style="color:var(--gr);font-family:Syne,sans-serif;font-size:12px">${g.charged.toFixed(2)}</td>
+  </tr>`).join('');
+  document.getElementById('glbl').textContent=`Showing ${gs.length} of ${allG.length} guests`;
+}
+function filterG(){
+  const q=document.getElementById('gsearch').value.toLowerCase();
+  const seg=document.getElementById('fseg').value;
+  const type=document.getElementById('ftype').value;
+  const nat=document.getElementById('fnat').value;
+  const sob=document.getElementById('fsob').value;
+  renderG(allG.filter(g=>{
+    if(seg&&g.seg!==seg)return false;
+    if(type&&g.type!==type)return false;
+    if(nat&&g.nat!==nat)return false;
+    if(sob&&g.sob!==sob)return false;
+    if(q&&!`${g.room} ${g.name} ${g.co} ${g.nat}`.toLowerCase().includes(q))return false;
+    return true;
+  }));
+}
+
+function buildCompanies(){
+  document.getElementById('co-ttl').textContent=COMPANIES.length;
+  document.getElementById('co-top').textContent=COMPANIES[0].name.substring(0,16)+'…';
+  document.getElementById('co-top-s').textContent=COMPANIES[0].rooms+' rooms · '+COMPANIES[0].pax+' pax';
+  document.getElementById('co-corp').textContent=COMPANIES.reduce((s,c)=>s+c.rooms,0);
+  document.getElementById('co-pax').textContent=COMPANIES.reduce((s,c)=>s+c.pax,0);
+  const maxR=COMPANIES[0].rooms;
+  document.getElementById('colist2').innerHTML=COMPANIES.map((c,i)=>`
+    <div class="coi"><div class="cork">${i+1}</div><div class="conm">${c.name}</div>
+    <div class="cobw"><div class="cob" style="width:${(c.rooms/maxR*100).toFixed(0)}%"></div></div>
+    <div class="corm">${c.rooms}</div><div class="copx">${c.pax}p</div></div>`).join('');
+  const top12=COMPANIES.slice(0,12);
+  if(CH.co)CH.co.destroy();
+  CH.co=new Chart(document.getElementById('cochart'),{
+    type:'bar',
+    data:{
+      labels:top12.map(c=>c.name.length>16?c.name.substring(0,16)+'…':c.name),
+      datasets:[
+        {label:'Rooms',data:top12.map(c=>c.rooms),backgroundColor:'#3b82f6',borderRadius:4,borderWidth:0},
+        {label:'Pax',data:top12.map(c=>c.pax),backgroundColor:'#e8a020',borderRadius:4,borderWidth:0}
+      ]
+    },
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{color:'#8ba4c0',font:{size:11},padding:8}}},
+      scales:{x:{ticks:{color:'#8ba4c0',font:{size:10}},grid:{color:'#1c2d44'}},y:{ticks:{color:'#8ba4c0',font:{size:9}},grid:{display:false}}}}
+  });
+  document.getElementById('cochart').style.maxHeight='440px';
+}
+
+function buildRevenue(){
+  const rack=COMPANIES.reduce((s,c)=>s+c.rack,0);
+  const chg=COMPANIES.reduce((s,c)=>s+c.charged,0);
+  const occ=OCC.GT.t,avail=OCC.GT.u;
+  const avg=chg/occ,revpar=chg/avail,disc=rack-chg;
+  function f(n){if(n>=1000000)return'SAR '+(n/1000000).toFixed(2)+'M';if(n>=1000)return'SAR '+(n/1000).toFixed(1)+'K';return'SAR '+n.toFixed(0);}
+  document.getElementById('r-rack').textContent=f(rack);
+  document.getElementById('r-chg').textContent=f(chg);
+  document.getElementById('r-disc').textContent=f(disc);
+  document.getElementById('r-avg').textContent='SAR '+avg.toFixed(0);
+  document.getElementById('r-revpar').textContent='SAR '+revpar.toFixed(0);
+  document.getElementById('r-pct').textContent=(chg/rack*100).toFixed(1)+'%';
+  const occKeys=['Studio','1BD Shared','Exec Room','Prem 1BR','Std 1BR','2BR','Std 3BR','Prem 3BR','SRC'];
+  const avgC={'Studio':123,'1BD Shared':150,'Exec Room':163,'Prem 1BR':156,'Std 1BR':175,'2BR':225,'Std 3BR':223,'Prem 3BR':200,'SRC':60};
+  const avgRk={'Studio':800,'1BD Shared':900,'Exec Room':950,'Prem 1BR':800,'Std 1BR':800,'2BR':1000,'Std 3BR':1200,'Prem 3BR':1200,'SRC':600};
+  if(CH.ru)CH.ru.destroy();
+  CH.ru=new Chart(document.getElementById('ruchart'),{
+    type:'bar',
+    data:{
+      labels:occKeys.map(k=>OCC[k]?OCC[k].label:k),
+      datasets:[
+        {label:'Rack SAR',data:occKeys.map(k=>OCC[k]?(OCC[k].t*avgRk[k]):0),backgroundColor:'rgba(59,130,246,0.3)',borderColor:'#3b82f6',borderWidth:1.5,borderRadius:5},
+        {label:'Charged SAR',data:occKeys.map(k=>OCC[k]?(OCC[k].t*avgC[k]):0),backgroundColor:'#e8a020',borderRadius:5,borderWidth:0}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{color:'#8ba4c0',font:{size:11},padding:8}}},
+      scales:{x:{ticks:{color:'#8ba4c0',font:{size:9},maxRotation:30},grid:{display:false}},y:{ticks:{color:'#8ba4c0',callback:v=>'SAR '+(v/1000).toFixed(0)+'k'},grid:{color:'#1c2d44'}}}}
+  });
+  const topco=[...COMPANIES].filter(c=>c.charged>0).sort((a,b)=>b.charged-a.charged).slice(0,10);
+  if(CH.rco)CH.rco.destroy();
+  CH.rco=new Chart(document.getElementById('rcochart'),{
+    type:'bar',
+    data:{
+      labels:topco.map(c=>c.name.length>14?c.name.substring(0,14)+'…':c.name),
+      datasets:[{data:topco.map(c=>c.charged),backgroundColor:COLS,borderRadius:5,borderWidth:0}]
+    },
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` SAR ${c.raw.toLocaleString()}`}}},
+      scales:{x:{ticks:{color:'#8ba4c0',callback:v=>'SAR '+(v/1000).toFixed(1)+'k'},grid:{color:'#1c2d44'}},y:{ticks:{color:'#8ba4c0',font:{size:9}},grid:{display:false}}}}
+  });
+}
+
+buildKPIs();buildOcc();buildStayMix();buildCOUT();buildSRC();
+buildNatList();buildNatBar();
+buildGuests();buildCompanies();buildRevenue();
+</script>
+</body>
+</html>
